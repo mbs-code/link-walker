@@ -17,7 +17,9 @@
   "dependencies": {
     "@oclif/core": "^1",
     "@oclif/plugin-help": "^5",
-    "@oclif/plugin-plugins": "^2.0.1"
+    "@oclif/plugin-plugins": "^2.0.1",
+    "prisma": "^3.9.2",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^16.9.4",
