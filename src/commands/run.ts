@@ -30,6 +30,7 @@ export default class Run extends Command {
 
     // 処理実態を作成
     const walk = new WalkManager(site)
-    await walk.step()
+    await walk.resetQueue()
+    // await walk.step()
   }
 }
