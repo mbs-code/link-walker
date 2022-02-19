@@ -1,5 +1,6 @@
 import { Command, Flags } from '@oclif/core'
 import SiteRepository from '../repositories/site-repository'
+import HttpUtil from '../utils/http-util'
 
 export default class Run extends Command {
   static description = 'Walk site link'
@@ -22,6 +23,8 @@ export default class Run extends Command {
     // DBからサイト情報を取ってくる
     const site = await SiteRepository.findOrFail(code)
 
-    console.log(site)
+    // HTTP GET
+    const $ = await HttpUtil.fetch(site.url)
+    console.log($("title").text()) // TODO: 仮
   }
 }
