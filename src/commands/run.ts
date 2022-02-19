@@ -1,6 +1,7 @@
 import { Command, Flags } from '@oclif/core'
+import WalkManager from '../libs/walk-manager'
 import SiteRepository from '../repositories/site-repository'
-import HttpUtil from '../utils/http-util'
+import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 export default class Run extends Command {
@@ -21,15 +22,14 @@ export default class Run extends Command {
     const { args } = await this.parse(Run)
     const code = args.code
 
-    Logger.info('🔄 Run walk site...')
+    Logger.info('🔄 Run walking site...')
 
     // DBからサイト情報を取ってくる
     const site = await SiteRepository.findOrFail(code)
-    Logger.info('📝 [%s] %s (%s)', site.id, site.key, site.title)
+    Logger.info('📝 %s', DumpUtil.site(site))
 
-    // HTTP GET
-    const $ = await HttpUtil.fetch(site.url)
-
-    console.log($('title').text()) // TODO: 仮
+    // 処理実態を作成
+    const walk = new WalkManager(site)
+    await walk.step()
   }
 }
