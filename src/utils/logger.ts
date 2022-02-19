@@ -22,7 +22,7 @@ configure({
   },
 })
 
-const logger = getLogger()
-logger.level = 'debug'
+const Logger = getLogger()
+Logger.level = 'debug'
 
-export default logger
+export default Logger
