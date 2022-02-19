@@ -2,6 +2,7 @@ import { Page } from '@prisma/client'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
 import { SiteWithRelations } from '../repositories/site-repository'
+import DumpUtil from '../utils/dump-util'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
@@ -51,14 +52,21 @@ export default class WalkManager {
     }
   }
 
+  /**
+   * キューを初期化する.
+   *
+   * @returns void
+   */
   public async resetQueue(): Promise<void> {
+    Logger.debug('RESET QUEUE <%s>', this.site.key)
+
     // キューを空にする
     await QueueRepository.clearQueue(this.site)
 
     // ルート要素をキューに入れる
     const rootPage = await PageRepository.upsert(this.site, this.site.url, this.site.title)
-    const rootQueue = await QueueRepository.addQueueByPage(this.site, rootPage)
-    console.log(rootQueue)
+    await QueueRepository.addQueueByPage(this.site, rootPage)
+    Logger.debug('> <%s> add root page: %s', this.site.key, DumpUtil.page(rootPage))
   }
 
   ///

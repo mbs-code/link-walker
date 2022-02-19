@@ -1,4 +1,6 @@
 import { Page, PrismaClient, Queue, Site } from '@prisma/client'
+import DumpUtil from '../utils/dump-util'
+import Logger from '../utils/logger'
 import PageRepository from './page-repository'
 
 const prisma = new PrismaClient()
@@ -46,7 +48,14 @@ export default class QueueRepository {
     return page
   }
 
-  public static async addQueueByPage(site: Site, page: Page): Promise<Queue | null> {
+  /**
+   * ページをキューに追加する.
+   *
+   * @param {Site} site サイト情報
+   * @param {Page} page 追加するページ
+   * @returns {Queue} キュー
+   */
+  public static async addQueueByPage(site: Site, page: Page): Promise<Queue> {
     // page の作成とキューの追加
     const queue = await prisma.queue.create({
       data: {
@@ -55,14 +64,22 @@ export default class QueueRepository {
       },
     })
 
+    Logger.trace('> <%s> db:create:queue [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
+
     return queue
   }
 
+  /**
+   * キューを空にする.
+   *
+   * @param {Site} site サイト情報
+   * @returns void
+   */
   public static async clearQueue(site: Site): Promise<void> {
-    const queue = await prisma.queue.deleteMany({
+    const queues = await prisma.queue.deleteMany({
       where: { siteId: site.id },
     })
 
-    console.log('clear ' + queue)
+    Logger.trace('> <%s> db:delete:queue %s items', site.key, queues.count)
   }
 }

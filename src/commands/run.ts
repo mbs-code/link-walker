@@ -10,19 +10,14 @@ export default class Run extends Command {
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   static flags = {
-    // flag with a value (-n, --name=VALUE)
-    name: Flags.string({ char: 'n', description: 'name to print' }),
-    // flag with no value (-f, --force)
-    force: Flags.boolean({ char: 'f' }),
+    reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
   }
 
   static args = [{ name: 'code', required: true, description: 'site ID or KEY' }]
 
   public async run(): Promise<void> {
-    const { args } = await this.parse(Run)
+    const { args, flags } = await this.parse(Run)
     const code = args.code
-
-    Logger.info('🔄 Run walking site...')
 
     // DBからサイト情報を取ってくる
     const site = await SiteRepository.findOrFail(code)
@@ -30,7 +25,14 @@ export default class Run extends Command {
 
     // 処理実態を作成
     const walk = new WalkManager(site)
-    await walk.resetQueue()
+
+    // キューのリセット処理
+    if (flags.reset) {
+      Logger.info('🔄 Reset queue.')
+      await walk.resetQueue()
+    }
+
+    Logger.info('🔄 Run walking site...')
     // await walk.step()
   }
 }
