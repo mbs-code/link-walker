@@ -19,14 +19,15 @@ export default class PageRepository {
   }
 
   /**
-   * ページを作成・更新する.
+   * 値からページを作成・更新する.
    *
    * @param {Site} site サイト情報
    * @param {string} url URL
    * @param {string?} title ページタイトル
    * @returns {Promise<Page>} 作成・更新したページ
    */
-  public static async upsert(site: Site, url: string, title?: string): Promise<Page> {
+  public static async upsertRaw(site: Site, url: string, title?: string): Promise<Page> {
+    // TODO: upsert と共通化したい
     const data = {
       siteId: site.id,
       url: url,
@@ -42,6 +43,25 @@ export default class PageRepository {
     })
 
     Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(page))
+
+    return page
+  }
+
+  /**
+   * ページを作成・更新する.
+   *
+   * @param {Site} site サイト情報
+   * @param {Page} page 更新するページ要素
+   * @returns {Promise<Page>} 作成・更新したページ
+   */
+  public static async upsert(site: Site, page: Page): Promise<Page> {
+    const data = await prisma.page.upsert({
+      where: { id: page?.id ?? 0 },
+      create: page,
+      update: page,
+    })
+
+    Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(data))
 
     return page
   }

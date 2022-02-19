@@ -19,7 +19,7 @@ export default class WalkAgent {
    */
   public async insertQueueByRoot(): Promise<void> {
     // ルートページの作成＆キューに入れる
-    const rootPage = await PageRepository.upsert(this.site, this.site.url, this.site.title)
+    const rootPage = await PageRepository.upsertRaw(this.site, this.site.url, this.site.title)
     await QueueRepository.addQueueByPage(this.site, rootPage)
 
     Logger.debug('> <%s> add root page: %s', this.site.key, DumpUtil.page(rootPage))

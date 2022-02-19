@@ -4,6 +4,7 @@ import { SiteWithWalkers } from '../repositories/site-repository'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
+import ImageProcessor from './processors/image-processor'
 import WalkAgent from './walk-agent'
 
 export type WalkOptions = {
@@ -18,6 +19,7 @@ export default class WalkManager {
 
   private processors = {
     extract: new ExtractProcessor(),
+    image: new ImageProcessor(),
   }
 
   constructor(site: SiteWithWalkers, options?: WalkOptions) {
@@ -34,13 +36,20 @@ export default class WalkManager {
    */
   public async step(): Promise<void> {
     // キューから一つ取り出す
-    const page = await QueueRepository.deque(this.site, this.usePeek)
+    let page = await QueueRepository.deque(this.site, this.usePeek)
     if (!page) throw new ReferenceError('queue is empty.')
 
     Logger.debug('STEP <%s> %s', this.site.key, page.url)
 
     // dom に変換
     const $ = await HttpUtil.fetch(page.url)
+
+    // タイトルが取れたら保存しておく
+    const title = $('title').text()
+    if (title) {
+      page.title = title
+      page = await PageRepository.upsert(this.site, page)
+    }
 
     // 一致する walker に対して処理をする
     for await (const walker of this.site.walkers) {
@@ -54,6 +63,8 @@ export default class WalkManager {
             await this.processors.extract.exec($, page, walker, this.agent)
             break
           case 'image':
+            await this.processors.image.exec($, page, walker, this.agent)
+            break
           default:
             throw new ReferenceError(`${walker.processor} is not defined.`)
         }

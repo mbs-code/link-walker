@@ -3,9 +3,9 @@ import { CheerioAPI } from 'cheerio'
 import Logger from '../../utils/logger'
 import WalkAgent from '../walk-agent'
 
-export default class ExtractProcessor {
+export default class ImageProcessor {
   /**
-   * URL抽出処理を実行する.
+   * 画像保存処理を実行する.
    *
    * @param {CheerioAPI} $ DOM要素
    * @param {Parent} parent 親ページ
@@ -13,6 +13,7 @@ export default class ExtractProcessor {
    * @param {WalkAgent} agent Walkエージェント
    * @returns void
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async exec($: CheerioAPI, parent: Page, walker: Walker, agent: WalkAgent): Promise<void> {
     // set で重複禁止
     const set = new Set<string>()
@@ -39,9 +40,11 @@ export default class ExtractProcessor {
       Logger.debug('> filtered links: %d items', links.length)
     }
 
+    console.log(links)
+
     // キューに追加
     // 返り値が null なら既に処理したURL
-    const count = await agent.addQueues(links, parent)
-    Logger.debug('> add queue links: %d items', count)
+    // const count = await agent.addQueues(links, parent)
+    // Logger.debug('> add queue links: %d items', count)
   }
 }
