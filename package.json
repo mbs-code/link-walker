@@ -36,6 +36,8 @@
     "eslint-config-oclif-typescript": "^1.0.2",
     "eslint-config-prettier": "^8.3.0",
     "globby": "^11",
+    "husky": "^7.0.0",
+    "lint-staged": "^12.3.4",
     "oclif": "^2",
     "prettier": "^2.5.1",
     "shx": "^0.3.3",
@@ -63,10 +65,18 @@
     "lint": "eslint . --ext .ts",
     "prettier": "prettier **/*.ts --check",
     "fmt": "eslint --ext .ts --fix && prettier **/*.ts --write",
+    "lint-staged": "lint-staged",
     "postpack": "shx rm -f oclif.manifest.json",
     "posttest": "yarn lint",
     "prepack": "yarn build && oclif manifest && oclif readme",
-    "version": "oclif readme && git add README.md"
+    "version": "oclif readme && git add README.md",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "lint",
+      "prettier"
+    ]
   },
   "engines": {
     "node": ">=16.0.0"
