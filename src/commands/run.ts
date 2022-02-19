@@ -18,7 +18,7 @@ export default class Run extends Command {
   static args = [{ name: 'code', required: true, description: 'site ID or KEY' }]
 
   public async run(): Promise<void> {
-    const { args, flags } = await this.parse(Run)
+    const { args } = await this.parse(Run)
     const code = args.code
 
     Logger.info('🔄 Run walk site...')
