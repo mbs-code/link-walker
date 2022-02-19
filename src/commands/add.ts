@@ -1,6 +1,7 @@
 import { Command } from '@oclif/core'
 import { PrismaClient } from '@prisma/client'
 import ConfigUtil from '../utils/config-util'
+import Logger from '../utils/logger'
 
 export default class Add extends Command {
   static description = 'Add site configure'
@@ -18,10 +19,13 @@ export default class Add extends Command {
 
     // ファイルがあるならDBへ書き込み
     if (file) {
+      Logger.info('🔄 Load config yaml...')
+
       // ファイル読み込み
       const fullPath = ConfigUtil.fullpath(file)
+      Logger.debug('path: "%s"', fullPath)
       const siteItem = await ConfigUtil.load(fullPath)
-      this.log(JSON.stringify(siteItem))
+      Logger.debug('yaml: %s', JSON.stringify(siteItem))
 
       // DBへ書き込み
       const prisma = new PrismaClient()
@@ -32,7 +36,9 @@ export default class Add extends Command {
         create: siteItem,
         update: siteItem,
       })
-      this.log(JSON.stringify(site))
+      Logger.debug('record: %s', JSON.stringify(site))
+
+      Logger.info('✅ Loaded config yaml. id="%s" key="%s"', site.id, site.key)
     }
   }
 }
