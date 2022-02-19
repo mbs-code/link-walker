@@ -15,11 +15,13 @@ export const Schema = Joi.object({
 
   walkers: Joi.array()
     .items({
+      name: Joi.string(),
       urlPattern: Joi.string().required(),
       processor: Joi.string().valid('extract', 'image').required(),
-      queryPattern: Joi.string(),
-      options: Joi.object(),
+      urlFilter: Joi.string(),
+      queryFilter: Joi.string(),
     })
+    .unique('name')
     .min(1)
     .required(),
 })

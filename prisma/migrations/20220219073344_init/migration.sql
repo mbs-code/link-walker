@@ -10,10 +10,11 @@ CREATE TABLE "Site" (
 CREATE TABLE "Walker" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "siteId" INTEGER,
+    "name" TEXT NOT NULL,
     "urlPattern" TEXT NOT NULL,
     "processor" TEXT NOT NULL,
-    "queryPattern" TEXT,
-    "options" TEXT,
+    "urlFilter" TEXT,
+    "queryFilter" TEXT,
     CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 

@@ -23,10 +23,11 @@ model Walker {
   id     Int  @id @default(autoincrement())
   siteId Int?
 
-  urlPattern   String
-  processor    String // sqlite には enum が無いため、バリデ必須
-  queryPattern String?
-  options      String?
+  name        String
+  urlPattern  String
+  processor   String // sqlite には enum が無いため、バリデ必須
+  urlFilter   String?
+  queryFilter String?
 
   Site Site? @relation(fields: [siteId], references: [id])
 }
