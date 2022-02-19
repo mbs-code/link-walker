@@ -11,9 +11,9 @@ datasource db {
 }
 
 model Site {
-  id    Int    @id @default(autoincrement())
-  key   String?
-  name  String
+  id    Int     @id @default(autoincrement())
+  key   String? @unique
+  title String
   url   String
 
   // posts Post[]
