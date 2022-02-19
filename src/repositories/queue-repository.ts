@@ -14,9 +14,10 @@ export default class QueueRepository {
    * キューの先頭からページを取り出す.
    *
    * @param {Site} site サイト情報
+   * @param {boolean} usePeek ピークを使うか false
    * @returns {Promise<Page | null>} ページ要素
    */
-  public static async deque(site: Site): Promise<Page | null> {
+  public static async deque(site: Site, usePeek = false): Promise<Page | null> {
     // Queue の先頭を取り出す
     const queue = await prisma.queue.findFirst({
       where: { siteId: site.id },
@@ -24,8 +25,8 @@ export default class QueueRepository {
       include: { page: true },
     })
 
-    // Queue は消す
-    if (queue) {
+    // ピークモード以外なら、Queue は消す
+    if (!usePeek && queue) {
       const remove = await prisma.queue.delete({
         where: { id: queue.id },
       })

@@ -6,17 +6,25 @@ import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
 import WalkAgent from './walk-agent'
 
+export type WalkOptions = {
+  peek?: boolean
+}
+
 export default class WalkManager {
   private site: SiteWithWalkers
+  private usePeek: boolean
+
   private agent: WalkAgent
 
   private processors = {
     extract: new ExtractProcessor(),
   }
 
-  constructor(site: SiteWithWalkers) {
+  constructor(site: SiteWithWalkers, options?: WalkOptions) {
     this.site = site
     this.agent = new WalkAgent(site)
+
+    this.usePeek = options?.peek ?? false
   }
 
   /**
@@ -26,7 +34,7 @@ export default class WalkManager {
    */
   public async step(): Promise<void> {
     // キューから一つ取り出す
-    const page = await QueueRepository.deque(this.site)
+    const page = await QueueRepository.deque(this.site, this.usePeek)
     if (!page) throw new ReferenceError('queue is empty.')
 
     Logger.debug('STEP <%s> %s', this.site.key, page.url)

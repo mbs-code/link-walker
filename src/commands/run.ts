@@ -11,6 +11,7 @@ export default class Run extends Command {
 
   static flags = {
     time: Flags.integer({ char: 't', description: 'Number of times.', default: 1 }),
+    peek: Flags.boolean({ char: 'p', description: 'Peek when deque.' }),
     clear: Flags.boolean({ char: 'c', description: 'Reset queue & Clear pages.' }),
     reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
   }
@@ -25,7 +26,9 @@ export default class Run extends Command {
     Logger.info('📝 %s', DumpUtil.site(site))
 
     // 処理実態を作成
-    const walk = new WalkManager(site)
+    const walk = new WalkManager(site, {
+      peek: flags.peek,
+    })
 
     // キューのリセット処理
     if (flags.clear) {
