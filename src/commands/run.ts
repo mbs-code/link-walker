@@ -10,6 +10,8 @@ export default class Run extends Command {
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   static flags = {
+    time: Flags.integer({ char: 't', description: 'Number of times.', default: 1 }),
+    clear: Flags.boolean({ char: 'c', description: 'Reset queue & Clear pages.' }),
     reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
   }
 
@@ -17,22 +19,31 @@ export default class Run extends Command {
 
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Run)
-    const code = args.code
 
     // DBからサイト情報を取ってくる
-    const site = await SiteRepository.findOrFail(code)
+    const site = await SiteRepository.findOrFail(args.code)
     Logger.info('📝 %s', DumpUtil.site(site))
 
     // 処理実態を作成
     const walk = new WalkManager(site)
 
     // キューのリセット処理
-    if (flags.reset) {
+    if (flags.clear) {
+      Logger.info('🔄 Reset queue & Clear page.')
+      await walk.clearPage()
+    } else if (flags.reset) {
       Logger.info('🔄 Reset queue.')
       await walk.resetQueue()
     }
 
+    // 実行する
     Logger.info('🔄 Run walking site...')
-    // await walk.step()
+    for (let i = 0; i < flags.time; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await walk.step()
+    }
+
+    // TODO: 仮
+    Logger.info('✅ Walked! %s', DumpUtil.site(site))
   }
 }

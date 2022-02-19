@@ -1,6 +1,7 @@
 import { Page, PrismaClient, Site } from '@prisma/client'
 import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
+import QueueRepository from './queue-repository'
 
 const prisma = new PrismaClient()
 
@@ -35,7 +36,7 @@ export default class PageRepository {
     // unique要素でしか検索できないため、IDを探してから upsert する
     const exists = await PageRepository.findOne(site, url)
     const page = await prisma.page.upsert({
-      where: { id: exists?.id },
+      where: { id: exists?.id ?? 0 },
       create: data,
       update: data,
     })
@@ -43,5 +44,24 @@ export default class PageRepository {
     Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(page))
 
     return page
+  }
+
+  /**
+   * ページを空にする.
+   *
+   * キューも削除されます。
+   * @param {Site} site サイト情報
+   * @returns void
+   */
+  public static async clear(site: Site): Promise<void> {
+    // キューの全削除
+    await QueueRepository.clear(site)
+
+    // ページの全削除
+    const pages = await prisma.page.deleteMany({
+      where: { siteId: site.id },
+    })
+
+    Logger.trace('> <%s> db:delete:page %s items', site.key, pages.count)
   }
 }

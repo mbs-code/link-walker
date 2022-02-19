@@ -1,21 +1,22 @@
-import { Page } from '@prisma/client'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
-import { SiteWithRelations } from '../repositories/site-repository'
-import DumpUtil from '../utils/dump-util'
+import { SiteWithWalkers } from '../repositories/site-repository'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
+import WalkAgent from './walk-agent'
 
 export default class WalkManager {
-  private site: SiteWithRelations
+  private site: SiteWithWalkers
+  private agent: WalkAgent
 
   private processors = {
     extract: new ExtractProcessor(),
   }
 
-  constructor(site: SiteWithRelations) {
+  constructor(site: SiteWithWalkers) {
     this.site = site
+    this.agent = new WalkAgent(site)
   }
 
   /**
@@ -37,12 +38,12 @@ export default class WalkManager {
     for await (const walker of this.site.walkers) {
       const matcher = new RegExp(walker.urlPattern)
       if (matcher.test(page.url)) {
-        Logger.debug('> 🔍 walker: <%s> %s', walker.name, walker.processor)
+        Logger.debug('🔍 walker: <%s> %s', walker.name, walker.processor)
 
         // プロセッサーを実行
         switch (walker.processor) {
           case 'extract':
-            await this.processors.extract.exec($, walker, this)
+            await this.processors.extract.exec($, page, walker, this.agent)
             break
           case 'image':
           default:
@@ -61,20 +62,24 @@ export default class WalkManager {
     Logger.debug('RESET QUEUE <%s>', this.site.key)
 
     // キューを空にする
-    await QueueRepository.clearQueue(this.site)
+    await QueueRepository.clear(this.site)
 
     // ルート要素をキューに入れる
-    const rootPage = await PageRepository.upsert(this.site, this.site.url, this.site.title)
-    await QueueRepository.addQueueByPage(this.site, rootPage)
-    Logger.debug('> <%s> add root page: %s', this.site.key, DumpUtil.page(rootPage))
+    await this.agent.insertQueueByRoot()
   }
 
-  ///
+  /**
+   * キューとページを初期化する.
+   *
+   * @returns void
+   */
+  public async clearPage(): Promise<void> {
+    Logger.debug('CLEAR ALL PAGE <%s>', this.site.key)
 
-  public async addQueues(urls: string[], parent?: Page): Promise<void> {
-    for await (const url of urls) {
-      const page = await QueueRepository.addQueue(url, this.site, parent)
-      console.log(page)
-    }
+    // ページ（とキュー）を空にする
+    await PageRepository.clear(this.site)
+
+    // ルート要素をキューに入れる
+    await this.agent.insertQueueByRoot()
   }
 }
