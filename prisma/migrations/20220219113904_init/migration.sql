@@ -9,33 +9,33 @@ CREATE TABLE "Site" (
 -- CreateTable
 CREATE TABLE "Walker" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "siteId" INTEGER,
+    "siteId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "urlPattern" TEXT NOT NULL,
     "processor" TEXT NOT NULL,
     "urlFilter" TEXT,
     "queryFilter" TEXT,
-    CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Page" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "siteId" INTEGER,
+    "siteId" INTEGER NOT NULL,
     "pageId" INTEGER,
     "url" TEXT NOT NULL,
     "title" TEXT,
-    CONSTRAINT "Page_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "Page_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Page_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "Queue" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "siteId" INTEGER,
-    "pageId" INTEGER,
-    CONSTRAINT "Queue_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE SET NULL ON UPDATE CASCADE,
-    CONSTRAINT "Queue_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    "siteId" INTEGER NOT NULL,
+    "pageId" INTEGER NOT NULL,
+    CONSTRAINT "Queue_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT "Queue_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 -- CreateIndex

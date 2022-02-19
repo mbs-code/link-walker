@@ -22,8 +22,8 @@ model Site {
 }
 
 model Walker {
-  id     Int  @id @default(autoincrement())
-  siteId Int?
+  id     Int @id @default(autoincrement())
+  siteId Int
 
   name        String
   urlPattern  String
@@ -36,7 +36,7 @@ model Walker {
 
 model Page {
   id     Int  @id @default(autoincrement())
-  siteId Int?
+  siteId Int
   pageId Int?
 
   url   String
@@ -49,9 +49,9 @@ model Page {
 }
 
 model Queue {
-  id     Int  @id @default(autoincrement())
-  siteId Int?
-  pageId Int?
+  id     Int @id @default(autoincrement())
+  siteId Int
+  pageId Int
 
   site Site? @relation(fields: [siteId], references: [id])
   page Page? @relation(fields: [pageId], references: [id])
