@@ -25,6 +25,7 @@ export default class Run extends Command {
 
     // HTTP GET
     const $ = await HttpUtil.fetch(site.url)
-    console.log($("title").text()) // TODO: 仮
+
+    console.log($('title').text()) // TODO: 仮
   }
 }

@@ -18,13 +18,10 @@ export default class Add extends Command {
 
     // ファイル読み込み
     const fullPath = ConfigUtil.fullpath(file)
-    Logger.debug('path: "%s"', fullPath)
     const siteItem = await ConfigUtil.load(fullPath)
-    Logger.debug('yaml: %s', JSON.stringify(siteItem))
 
     // DBへ書き込み
     const site = await SiteRepository.upsertByKey(siteItem)
-    Logger.debug('record: %s', JSON.stringify(site))
 
     Logger.info('✅ Loaded config yaml. id="%s" key="%s"', site.id, site.key)
   }
