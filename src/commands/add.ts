@@ -1,5 +1,5 @@
 import { Command } from '@oclif/core'
-import { PrismaClient } from '@prisma/client'
+import SiteRepository from '../repositories/site-repository'
 import ConfigUtil from '../utils/config-util'
 import Logger from '../utils/logger'
 
@@ -23,14 +23,7 @@ export default class Add extends Command {
     Logger.debug('yaml: %s', JSON.stringify(siteItem))
 
     // DBへ書き込み
-    const prisma = new PrismaClient()
-    const site = await prisma.site.upsert({
-      where: {
-        key: siteItem.key ?? undefined,
-      },
-      create: siteItem,
-      update: siteItem,
-    })
+    const site = await SiteRepository.upsertByKey(siteItem)
     Logger.debug('record: %s', JSON.stringify(site))
 
     Logger.info('✅ Loaded config yaml. id="%s" key="%s"', site.id, site.key)
