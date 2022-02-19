@@ -17,6 +17,8 @@ model Site {
   url   String
 
   walkers Walker[]
+  pages   Page[]
+  queues  Queue[]
 }
 
 model Walker {
@@ -29,5 +31,28 @@ model Walker {
   urlFilter   String?
   queryFilter String?
 
-  Site Site? @relation(fields: [siteId], references: [id])
+  site Site? @relation(fields: [siteId], references: [id])
+}
+
+model Page {
+  id     Int  @id @default(autoincrement())
+  siteId Int?
+  pageId Int?
+
+  url   String
+  title String?
+
+  site     Site?   @relation(fields: [siteId], references: [id])
+  parent   Page?   @relation("SubCategories", fields: [pageId], references: [id])
+  children Page[]  @relation("SubCategories")
+  queues   Queue[]
+}
+
+model Queue {
+  id     Int  @id @default(autoincrement())
+  siteId Int?
+  pageId Int?
+
+  site Site? @relation(fields: [siteId], references: [id])
+  page Page? @relation(fields: [pageId], references: [id])
 }
