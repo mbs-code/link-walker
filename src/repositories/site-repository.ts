@@ -5,6 +5,19 @@ const prisma = new PrismaClient()
 
 export default class SiteRepository {
   /**
+   * Siteレコードを全て取得する.
+   *
+   * @returns {Promise<Sites>} Siteレコード配列
+   */
+  public static async findAll(): Promise<Site[]> {
+    const sites = await prisma.site.findMany({
+      orderBy: [{ id: 'asc' }],
+    })
+
+    return sites
+  }
+
+  /**
    * Siteレコードを取得する.
    *
    * @param {string} code ID or KEYY

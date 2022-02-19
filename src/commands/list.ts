@@ -1,5 +1,5 @@
 import { Command } from '@oclif/core'
-import { PrismaClient } from '@prisma/client'
+import SiteRepository from '../repositories/site-repository'
 
 export default class List extends Command {
   static description = 'Show site table.'
@@ -8,10 +8,7 @@ export default class List extends Command {
 
   public async run(): Promise<void> {
     // DBから読み出し
-    const prisma = new PrismaClient()
-    const sites = await prisma.site.findMany({
-      orderBy: [{ id: 'asc' }],
-    })
+    const sites = await SiteRepository.findAll()
 
     // TODO: CliUx が使えない
     console.table(sites)
