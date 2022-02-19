@@ -74,8 +74,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "lint",
-      "prettier"
+      "yarn lint",
+      "yarn prettier"
     ]
   },
   "engines": {
