@@ -1,0 +1,7 @@
+extends:
+  - oclif
+  - oclif-typescript
+  - prettier
+rules:
+  unicorn/prefer-node-protocol: off # node:xx 必須化
+  no-warning-comments: off # TODO 許可
