@@ -1,5 +1,6 @@
 import { Page, Walker } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
+import sleep from 'sleep-promise'
 import WalkAgent from '../walk-agent'
 
 export default class ExtractProcessor {
@@ -18,5 +19,7 @@ export default class ExtractProcessor {
 
     // キューに追加
     await agent.addQueues(walker, links, parent)
+
+    await sleep(1500) // TODO: 仮
   }
 }
