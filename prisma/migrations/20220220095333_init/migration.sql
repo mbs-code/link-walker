@@ -7,20 +7,6 @@ CREATE TABLE "Site" (
 );
 
 -- CreateTable
-CREATE TABLE "Walker" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "siteId" INTEGER NOT NULL,
-    "name" TEXT NOT NULL,
-    "urlPattern" TEXT NOT NULL,
-    "processor" TEXT NOT NULL,
-    "urlFilter" TEXT,
-    "queryFilter" TEXT,
-    "priority" INTEGER NOT NULL DEFAULT 0,
-    "addParentGen" INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
-);
-
--- CreateTable
 CREATE TABLE "Page" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "siteId" INTEGER NOT NULL,

@@ -1,10 +1,9 @@
-import { Page } from '@prisma/client'
-import { SiteWithWalkers } from '../repositories/site-repository'
+import { Page, Site } from '@prisma/client'
 
 export default class DumpUtil {
-  public static site(s?: SiteWithWalkers | null): string {
+  public static site(s?: Site | null): string {
     if (s) {
-      return `[${s.id}]<${s.key}> ${s.title} (walkers: ${s.walkers.length})`
+      return `[${s.id}]<${s.key}> ${s.title}`
     }
 
     return 'null'

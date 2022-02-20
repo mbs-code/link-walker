@@ -1,7 +1,5 @@
 import { Command, Flags } from '@oclif/core'
-import WalkManager from '../libs/walk-manager'
-import SiteRepository from '../repositories/site-repository'
-import DumpUtil from '../utils/dump-util'
+import SiteConfigLoader from '../apps/site-config-loader'
 import Logger from '../utils/logger'
 
 export default class Run extends Command {
@@ -16,17 +14,13 @@ export default class Run extends Command {
     reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
   }
 
-  static args = [{ name: 'code', required: true, description: 'site ID or KEY' }]
+  static args = [{ name: 'file', required: true, description: 'site config.yaml' }]
 
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Run)
 
-    // DBからサイト情報を取ってくる
-    const site = await SiteRepository.findOrFail(args.code)
-    Logger.info('📝 %s', DumpUtil.site(site))
-
-    // 処理実態を作成
-    const walk = new WalkManager(site, {
+    // 実処理インスタンスを作成
+    const walk = await SiteConfigLoader.load(args.file, {
       peek: flags.peek,
     })
 
@@ -47,6 +41,6 @@ export default class Run extends Command {
     }
 
     // TODO: 仮
-    Logger.info('✅ Walked! %s', DumpUtil.site(site))
+    // Logger.info('✅ Walked! %s', DumpUtil.site(site))
   }
 }

@@ -1,13 +1,9 @@
-import { PrismaClient, Site, Walker } from '@prisma/client'
-import DumpUtil from '../utils/dump-util'
-import Logger from '../utils/logger'
-import { SiteConfig } from '../utils/site-config-schema'
+import { PrismaClient, Site } from '@prisma/client'
+import { SiteConfig } from '../apps/site-config-schema'
+// import DumpUtil from '../utils/dump-util'
+// import Logger from '../utils/logger'
 
 const prisma = new PrismaClient()
-
-export type SiteWithWalkers = Site & {
-  walkers: Walker[]
-}
 
 export default class SiteRepository {
   /**
@@ -15,74 +11,36 @@ export default class SiteRepository {
    *
    * @returns {Promise<SiteWithWalkers>} Siteレコード配列
    */
-  public static async findAll(): Promise<SiteWithWalkers[]> {
+  public static async findAll(): Promise<Site[]> {
     const sites = await prisma.site.findMany({
       orderBy: [{ id: 'asc' }],
-      include: {
-        walkers: true,
-      },
     })
 
     return sites
   }
 
   /**
-   * Siteレコードを取得する.
-   *
-   * @param {string} code ID or KEYY
-   * @returns {Promise<SiteWithWalkers>} Siteレコード
-   */
-  public static async findOrFail(code?: string | number): Promise<SiteWithWalkers> {
-    const id = Number(code)
-    const key = String(code)
-
-    const site = await prisma.site.findFirst({
-      where: {
-        OR: [{ id: Number.isNaN(id) ? undefined : id }, { key: key }],
-      },
-      include: {
-        walkers: true,
-      },
-    })
-    if (!site) throw new ReferenceError(`${code} is not found.`)
-
-    return site
-  }
-
-  /**
    * SiteConfig を使ってレコードを保存する.
    *
    * key を基準に更新します。
-   * @param {SiteConfig} siteConfig Siteコード
-   * @returns {Promise<SiteWithWalkers>} 保存後のSiteレコード
+   * @param {SiteConfig} siteConfig サイト設定
+   * @returns {Promise<Site>} 保存後のSiteレコード
    */
-  public static async upsertBySiteConfig(siteConfig: SiteConfig): Promise<SiteWithWalkers> {
-    // Site の upsert
+  public static async upsert(siteConfig: SiteConfig): Promise<Site> {
+    // 更新用データ構築
+    const data = {
+      key: siteConfig.key,
+      url: siteConfig.url,
+      title: siteConfig.title,
+    }
+
+    // key を基準にして Site の upsert
     const site = await prisma.site.upsert({
-      where: {
-        key: siteConfig.site.key ?? undefined,
-      },
-      create: siteConfig.site,
-      update: siteConfig.site,
+      where: { key: siteConfig.key },
+      create: data,
+      update: data,
     })
 
-    // Walkers の置き換え（順番が重要なので全消し + 追加)
-    const data = await prisma.site.update({
-      where: {
-        id: site.id,
-      },
-      data: {
-        walkers: {
-          deleteMany: {},
-          create: siteConfig.walkers,
-        },
-      },
-      include: {
-        walkers: true,
-      },
-    })
-    Logger.trace('> <%s> db:create:site %s', data.key, DumpUtil.site(data))
-
-    return data
+    return site
   }
 }
