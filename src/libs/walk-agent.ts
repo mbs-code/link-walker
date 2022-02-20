@@ -37,13 +37,16 @@ export default class WalkAgent {
     // 配列に変換
     let links = [...set]
     Logger.debug('> <%s> extract links: %d items', this.site.key, links.length)
+    Logger.trace(JSON.stringify(links))
 
     // URL フィルターを通す
     const urlFilter = walker.urlFilter
     if (urlFilter) {
       const matcher = new RegExp(urlFilter)
       links = links.filter((link) => matcher.test(link))
+
       Logger.debug('> <%s> filtered links: %d items', this.site.key, links.length)
+      Logger.trace(JSON.stringify(links))
     }
 
     return links
@@ -61,7 +64,9 @@ export default class WalkAgent {
 
     // DBに存在しないURLのみ返却する
     const nonExistUrls = urls.filter((url) => !dbPages.some((page) => page.url === url))
+
     Logger.debug('> <%s> filtered new links: %d items', this.site.key, nonExistUrls.length)
+    Logger.trace(JSON.stringify(nonExistUrls))
 
     return nonExistUrls
   }
@@ -86,18 +91,27 @@ export default class WalkAgent {
    * キューにURLを追加する.
    *
    * 既に処理したURLは無視されます。
+   * @param {Walker} walker Walkエージェント
    * @param {string[]} urls URL配列
    * @param {Page?} parent 親ページ要素
    * @returns {number} 追加に成功した数
    */
-  public async addQueues(urls: string[], parent?: Page): Promise<number> {
+  public async addQueues(walker: Walker, urls: string[], parent?: Page): Promise<number> {
     // 既に存在するURLを取り除く
     const newLinks = await this.filteredNonExistUrls(urls)
 
     // キューに追加する
     let success = 0
     for await (const link of newLinks) {
-      const page = await QueueRepository.addQueueByNewUrl(this.site, link, parent)
+      const page = await QueueRepository.addQueueByNewUrl(
+        this.site,
+        {
+          url: link,
+          parent: parent,
+        },
+        walker.priority
+      )
+
       if (page) success++
     }
 

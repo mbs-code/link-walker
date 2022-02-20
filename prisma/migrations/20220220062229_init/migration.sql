@@ -15,6 +15,7 @@ CREATE TABLE "Walker" (
     "processor" TEXT NOT NULL,
     "urlFilter" TEXT,
     "queryFilter" TEXT,
+    "priority" INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
@@ -34,6 +35,7 @@ CREATE TABLE "Queue" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "siteId" INTEGER NOT NULL,
     "pageId" INTEGER NOT NULL,
+    "priority" INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT "Queue_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Queue_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );

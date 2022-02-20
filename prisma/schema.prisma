@@ -30,6 +30,7 @@ model Walker {
   processor   String // sqlite には enum が無いため、バリデ必須
   urlFilter   String?
   queryFilter String?
+  priority    Int     @default(0) // サイトの処理優先度
 
   site Site? @relation(fields: [siteId], references: [id])
 }
@@ -52,6 +53,8 @@ model Queue {
   id     Int @id @default(autoincrement())
   siteId Int
   pageId Int
+
+  priority Int @default(0)
 
   site Site? @relation(fields: [siteId], references: [id])
   page Page? @relation(fields: [pageId], references: [id])

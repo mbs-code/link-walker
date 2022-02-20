@@ -20,6 +20,7 @@ export const Schema = Joi.object({
       processor: Joi.string().valid('extract', 'image').required(),
       urlFilter: Joi.string(),
       queryFilter: Joi.string(),
+      priority: Joi.number().min(0).max(65_535),
     })
     .unique('name')
     .min(1)

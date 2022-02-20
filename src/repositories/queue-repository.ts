@@ -8,6 +8,12 @@ export type PageWithQueue = Page & {
   queues: Queue[]
 }
 
+export type PageParams = {
+  url: string
+  title?: string
+  parent?: Page
+}
+
 export default class QueueRepository {
   /**
    * キューの先頭からページを取り出す.
@@ -20,7 +26,7 @@ export default class QueueRepository {
     // Queue の先頭を取り出す
     const queue = await prisma.queue.findFirst({
       where: { siteId: site.id },
-      orderBy: [{ id: 'asc' }],
+      orderBy: [{ priority: 'desc' }, { id: 'asc' }],
       include: { page: true },
     })
 
@@ -41,19 +47,29 @@ export default class QueueRepository {
    *
    * 最適化のため、DBに追加されているかは確認していません。
    * @param {Site} site サイト情報
-   * @param {string} url URL
-   * @param {Page} parent 追加するページ
+   * @param {PageParams} params ページパラメタ
+   * @param {number} priority キューの優先度
    * @returns {Promise<PageWithQueue | null>} キュー
    */
-  public static async addQueueByNewUrl(site: Site, url: string, parent?: Page): Promise<PageWithQueue | null> {
+  public static async addQueueByNewUrl(
+    site: Site,
+    params: PageParams,
+    priority?: number
+  ): Promise<PageWithQueue | null> {
     // page の作成とキューの追加
     const page = await prisma.page.create({
       data: {
         siteId: site.id,
-        pageId: parent?.id,
-        url: url,
+        pageId: params.parent?.id,
+        url: params.url,
+        title: params.title,
         queues: {
-          create: [{ siteId: site.id }],
+          create: [
+            {
+              siteId: site.id,
+              priority: priority,
+            },
+          ],
         },
       },
       include: {
@@ -72,14 +88,16 @@ export default class QueueRepository {
    *
    * @param {Site} site サイト情報
    * @param {Page} page 追加するページ
+   * @param {number} priority キューの優先度
    * @returns {Queue} キュー
    */
-  public static async addQueueByPage(site: Site, page: Page): Promise<Queue> {
+  public static async addQueueByPage(site: Site, page: Page, priority?: number): Promise<Queue> {
     // page の作成とキューの追加
     const queue = await prisma.queue.create({
       data: {
         siteId: site.id,
         pageId: page.id,
+        priority: priority,
       },
     })
 

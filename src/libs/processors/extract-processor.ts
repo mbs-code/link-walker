@@ -17,6 +17,6 @@ export default class ExtractProcessor {
     const links = await agent.extractLinks($, walker)
 
     // キューに追加
-    await agent.addQueues(links, parent)
+    await agent.addQueues(walker, links, parent)
   }
 }
