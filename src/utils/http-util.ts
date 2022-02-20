@@ -2,7 +2,6 @@ import got from 'got'
 import cheerio, { CheerioAPI } from 'cheerio'
 import Logger from './logger'
 import prettyBytes from 'pretty-bytes'
-import { Blob } from 'buffer'
 
 export default class HttpUtil {
   /**
@@ -48,10 +47,6 @@ export default class HttpUtil {
     const size = prettyBytes(response.rawBody.byteLength)
     Logger.trace('> web:size: %s', size)
 
-    // blob 化
-    const blob = new Blob([response.body])
-    const buffer = Buffer.from(await blob.arrayBuffer())
-
-    return buffer
+    return response.body
   }
 }
