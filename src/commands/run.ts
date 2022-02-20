@@ -1,6 +1,7 @@
 import { Command, Flags } from '@oclif/core'
+import WalkManager from '../libs/walk-manager'
 import SiteRepository from '../repositories/site-repository'
-import HttpUtil from '../utils/http-util'
+import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 export default class Run extends Command {
@@ -9,27 +10,43 @@ export default class Run extends Command {
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   static flags = {
-    // flag with a value (-n, --name=VALUE)
-    name: Flags.string({ char: 'n', description: 'name to print' }),
-    // flag with no value (-f, --force)
-    force: Flags.boolean({ char: 'f' }),
+    time: Flags.integer({ char: 't', description: 'Number of times.', default: 1 }),
+    peek: Flags.boolean({ char: 'p', description: 'Peek when deque.' }),
+    clear: Flags.boolean({ char: 'c', description: 'Reset queue & Clear pages.' }),
+    reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
   }
 
   static args = [{ name: 'code', required: true, description: 'site ID or KEY' }]
 
   public async run(): Promise<void> {
-    const { args } = await this.parse(Run)
-    const code = args.code
-
-    Logger.info('🔄 Run walk site...')
+    const { args, flags } = await this.parse(Run)
 
     // DBからサイト情報を取ってくる
-    const site = await SiteRepository.findOrFail(code)
-    Logger.info('📝 [%s] %s (%s)', site.id, site.key, site.title)
+    const site = await SiteRepository.findOrFail(args.code)
+    Logger.info('📝 %s', DumpUtil.site(site))
 
-    // HTTP GET
-    const $ = await HttpUtil.fetch(site.url)
+    // 処理実態を作成
+    const walk = new WalkManager(site, {
+      peek: flags.peek,
+    })
 
-    console.log($('title').text()) // TODO: 仮
+    // キューのリセット処理
+    if (flags.clear) {
+      Logger.info('🔄 Reset queue & Clear page.')
+      await walk.clearPage()
+    } else if (flags.reset) {
+      Logger.info('🔄 Reset queue.')
+      await walk.resetQueue()
+    }
+
+    // 実行する
+    Logger.info('🔄 Run walking site...')
+    for (let i = 0; i < flags.time; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await walk.step()
+    }
+
+    // TODO: 仮
+    Logger.info('✅ Walked! %s', DumpUtil.site(site))
   }
 }

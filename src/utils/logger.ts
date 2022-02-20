@@ -14,15 +14,15 @@ configure({
       numBackups: 15,
       alwaysIncludePattern: true,
       keepFileExt: true,
+      level: 'debug', // debug までを記録
       layout: { type: 'pattern', pattern: '%d %5p - %m' },
     },
   },
   categories: {
-    default: { appenders: ['console', 'file'], level: 'debug' },
+    default: { appenders: ['console', 'file'], level: 'all' },
   },
 })
 
-const logger = getLogger()
-logger.level = 'debug'
+const Logger = getLogger()
 
-export default logger
+export default Logger

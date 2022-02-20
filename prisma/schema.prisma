@@ -11,10 +11,52 @@ datasource db {
 }
 
 model Site {
-  id    Int     @id @default(autoincrement())
-  key   String? @unique
+  id    Int    @id @default(autoincrement())
+  key   String @unique
   title String
   url   String
 
-  // posts Post[]
+  walkers Walker[]
+  pages   Page[]
+  queues  Queue[]
+}
+
+model Walker {
+  id     Int @id @default(autoincrement())
+  siteId Int
+
+  name         String
+  urlPattern   String
+  processor    String // sqlite には enum が無いため、バリデ必須
+  urlFilter    String?
+  queryFilter  String?
+  priority     Int     @default(0) // サイトの処理優先度
+  addParentGen Int     @default(0) // 親の世代数を決める（保存時に使う）
+
+  site Site? @relation(fields: [siteId], references: [id])
+}
+
+model Page {
+  id     Int  @id @default(autoincrement())
+  siteId Int
+  pageId Int?
+
+  url   String
+  title String?
+
+  site     Site?   @relation(fields: [siteId], references: [id])
+  parent   Page?   @relation("SubCategories", fields: [pageId], references: [id])
+  children Page[]  @relation("SubCategories")
+  queues   Queue[]
+}
+
+model Queue {
+  id     Int @id @default(autoincrement())
+  siteId Int
+  pageId Int
+
+  priority Int @default(0)
+
+  site Site? @relation(fields: [siteId], references: [id])
+  page Page? @relation(fields: [pageId], references: [id])
 }
