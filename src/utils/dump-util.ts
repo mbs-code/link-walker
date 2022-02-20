@@ -11,7 +11,7 @@ export default class DumpUtil {
 
   public static page(p?: Page | null): string {
     if (p) {
-      return `[${p.id}] ${p.url} (title: ${p.title})`
+      return `[${p.id}] ${p.url} (${p.title})`
     }
 
     return 'null'

@@ -60,7 +60,7 @@ export default class WalkManager {
     // タイトルが取れたら保存しておく
     const title = $('title').text()
     if (title) {
-      page.title = title
+      page.title = title.replace(/\r?\n/g, '').trim() // 改行コード、前後のスペースは消す
       page = await PageRepository.upsert(this.site, page)
     }
 
