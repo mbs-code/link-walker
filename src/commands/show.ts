@@ -1,58 +1,83 @@
 import { Command } from '@oclif/core'
+import { Site, Queue, Page } from '@prisma/client'
 import { cli } from 'cli-ux'
 import SiteConfigLoader from '../apps/site-config-loader'
-import { WalkDump } from '../libs/walk-manager'
+import PageRepository from '../repositories/page-repository'
+import QueueRepository from '../repositories/queue-repository'
+import SiteRepository from '../repositories/site-repository'
 import DumpUtil from '../utils/dump-util'
+import List from './list'
 
 export default class Show extends Command {
   static description = 'Show site status.'
 
-  static examples = [
-    { command: '<%= config.bin %> <%= command.id %>', description: 'Show all site status.' },
-    { command: '<%= config.bin %> <%= command.id %> config.yaml', description: 'Show site status.' },
-  ]
+  static examples = ['<%= config.bin %> <%= command.id %>']
 
   static args = [{ name: 'file', required: false }]
 
   public async run(): Promise<void> {
     const { args } = await this.parse(Show)
 
-    // 実処理インスタンスを作成
-    const manager = await SiteConfigLoader.load(args.file)
+    // もし file が指定されなかったら List の alias を貼る
+    if (!args.file) {
+      this.log('Alias: list %s', args.file)
+      await List.run()
+      return
+    }
+
+    // サイト設定の読み込み
+    const config = await SiteConfigLoader.loadfile(args.file)
 
     // データダンプ
-    const dump = await manager.dump()
+    const site = await SiteRepository.findOne(config.key)
+    const pages = site ? await PageRepository.findAll(site) : []
+    const queues = site ? await QueueRepository.findAll(site) : []
 
     // サイト情報
     this.log('▶ site infomation')
-    this.showSiteInfo(dump)
+    this.showSiteInfo(site, pages, queues)
 
     // キュー情報
     this.log()
-    this.log('▶ queue (%d)', dump.queues.length)
-    this.showQueueList(dump)
+    this.log('▶ queue (%d)', queues.length)
+    this.showQueueList(pages, queues)
 
     // ページ要素
     this.log()
-    this.log('▶ page tree (%d)', dump.pages.length)
-    this.showPageTree(dump)
+    this.log('▶ page tree (%d)', pages.length)
+    this.showPageTree(pages)
+
+    // サイトコンフィグ
+    this.log()
+    this.log('▶ config yaml')
+    this.log(JSON.stringify(config, null, 2))
   }
 
-  protected showSiteInfo({ site, pages, queues }: WalkDump): void {
+  protected showSiteInfo(site: Site | null, pages: Page[], queues: Queue[]): void {
     const items = [
-      { key: 'id', value: site.id },
-      { key: 'key', value: site.key },
-      { key: 'title', value: site.title },
-      { key: 'url', value: site.url },
-
-      { key: 'pages', value: pages.length },
-      { key: 'queues', value: queues.length },
+      {
+        id: site?.id,
+        key: site?.key,
+        title: site?.title,
+        url: site?.url,
+        pages: pages.length,
+        queues: queues.length,
+        lastRunAt: site?.updatedAt.toLocaleString(),
+      },
     ]
 
-    cli.table(items, { key: {}, value: {} }, { 'no-header': true })
+    cli.table(items, {
+      id: {},
+      key: {},
+      title: {},
+      url: {},
+      pages: {},
+      queues: {},
+      lastRunAt: { header: 'LastRunAt' },
+    })
   }
 
-  protected showQueueList({ pages, queues }: WalkDump): void {
+  protected showQueueList(pages: Page[], queues: Queue[]): void {
     const items = queues.map((queue, idx) => {
       // page 要素を検索する
       const page = pages.find((p) => p.id === queue.pageId)
@@ -66,7 +91,7 @@ export default class Show extends Command {
     cli.table(items, { key: {}, pri: {}, page: {} })
   }
 
-  protected showPageTree({ pages }: WalkDump): void {
+  protected showPageTree(pages: Page[]): void {
     const tree = cli.tree()
     for (const page of pages) {
       const stack = []

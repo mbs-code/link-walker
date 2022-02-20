@@ -1,23 +1,36 @@
 import { Command, Flags } from '@oclif/core'
 import SiteConfigLoader from '../apps/site-config-loader'
 import Logger from '../utils/logger'
+import Show from './show'
 
 export default class Run extends Command {
-  static description = 'Walking site links.'
+  static description = `Walking site links.
+  You can extract links and download objects step by step.
+  Please set the processing in the config.yaml file.`
 
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   static flags = {
-    time: Flags.integer({ char: 't', description: 'Number of times.', default: 1 }),
+    step: Flags.integer({ char: 's', description: 'Number of steps.', default: 1 }),
     peek: Flags.boolean({ char: 'p', description: 'Peek when deque.' }),
     clear: Flags.boolean({ char: 'c', description: 'Reset queue & Clear pages.' }),
     reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
+
+    status: Flags.boolean({ description: "[Alias] Show site status. (Don't run)" }),
+    ...Show.flags,
   }
 
   static args = [{ name: 'file', required: true, description: 'site config.yaml' }]
 
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Run)
+
+    // もし status が有効なら Show の Alias を貼る
+    if (flags.status) {
+      this.log('Alias: run %s', args.file)
+      await Show.run([args.file])
+      return
+    }
 
     // 実処理インスタンスを作成
     const manager = await SiteConfigLoader.load(args.file, {
@@ -35,7 +48,7 @@ export default class Run extends Command {
 
     // 実行する
     Logger.info('🔄 Run walking site...')
-    for (let i = 0; i < flags.time; i++) {
+    for (let i = 0; i < flags.step; i++) {
       // eslint-disable-next-line no-await-in-loop
       await manager.step()
     }

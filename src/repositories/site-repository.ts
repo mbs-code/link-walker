@@ -7,9 +7,23 @@ const prisma = new PrismaClient()
 
 export default class SiteRepository {
   /**
+   * Siteレコードを取得する.
+   *
+   * @param {string} key キー
+   * @returns {Promise<Site | nul>} Siteレコード配列
+   */
+  public static async findOne(key: string): Promise<Site | null> {
+    const site = await prisma.site.findUnique({
+      where: { key: key },
+    })
+
+    return site
+  }
+
+  /**
    * Siteレコードを全て取得する.
    *
-   * @returns {Promise<SiteWithWalkers>} Siteレコード配列
+   * @returns {Promise<Site>} Siteレコード配列
    */
   public static async findAll(): Promise<Site[]> {
     const sites = await prisma.site.findMany({
