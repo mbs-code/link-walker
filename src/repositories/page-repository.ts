@@ -6,6 +6,13 @@ import QueueRepository from './queue-repository'
 const prisma = new PrismaClient()
 
 export default class PageRepository {
+  /**
+   * URLに該当するページを取得する.
+   *
+   * @param {Site} site サイト情報
+   * @param {string} url URL
+   * @returns {Promise<Page | null>} DBに存在したページ
+   */
   public static async findOne(site: Site, url: string): Promise<Page | null> {
     // Page が存在するか確認する
     const page = await prisma.page.findFirst({
@@ -23,7 +30,7 @@ export default class PageRepository {
    *
    * @param {Site} site サイト情報
    * @param {string[]} urls URL配列
-   * @returns {Page[]} DBに存在したページ配列
+   * @returns {Promise<Page[]>} DBに存在したページ配列
    */
   public static async findMany(site: Site, urls: string[]): Promise<Page[]> {
     // 存在するページをすべて取得する
@@ -36,6 +43,25 @@ export default class PageRepository {
 
     return pages
   }
+
+  /**
+   * 親ページを取得する..
+   *
+   * @param {Page} page ページ要素
+   * @returns {Promise<Page | null>} DBに存在したページ
+   */
+  public static async findParent(page?: Page | null): Promise<Page | null> {
+    // 親のページが存在するか確認する
+    const parent = await prisma.page.findUnique({
+      where: {
+        id: page?.pageId ?? 0,
+      },
+    })
+
+    return parent
+  }
+
+  ///
 
   /**
    * 値からページを作成・更新する.

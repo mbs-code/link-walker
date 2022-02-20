@@ -25,12 +25,13 @@ model Walker {
   id     Int @id @default(autoincrement())
   siteId Int
 
-  name        String
-  urlPattern  String
-  processor   String // sqlite には enum が無いため、バリデ必須
-  urlFilter   String?
-  queryFilter String?
-  priority    Int     @default(0) // サイトの処理優先度
+  name         String
+  urlPattern   String
+  processor    String // sqlite には enum が無いため、バリデ必須
+  urlFilter    String?
+  queryFilter  String?
+  priority     Int     @default(0) // サイトの処理優先度
+  addParentGen Int     @default(0) // 親の世代数を決める（保存時に使う）
 
   site Site? @relation(fields: [siteId], references: [id])
 }

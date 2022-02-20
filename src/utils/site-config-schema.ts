@@ -21,6 +21,7 @@ export const Schema = Joi.object({
       urlFilter: Joi.string(),
       queryFilter: Joi.string(),
       priority: Joi.number().min(0).max(65_535),
+      addParentGen: Joi.number().min(0),
     })
     .unique('name')
     .min(1)

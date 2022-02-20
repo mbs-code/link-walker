@@ -16,6 +16,7 @@ CREATE TABLE "Walker" (
     "urlFilter" TEXT,
     "queryFilter" TEXT,
     "priority" INTEGER NOT NULL DEFAULT 0,
+    "addParentGen" INTEGER NOT NULL DEFAULT 0,
     CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 

@@ -71,6 +71,26 @@ export default class WalkAgent {
     return nonExistUrls
   }
 
+  /**
+   * 親要素とするページを取得.
+   *
+   * 設定によってgenerationをたどる
+   * @param {Page}parent 基準となる親ページ
+   * @param {Walker} walker 使用している walker
+   * @returns {Promise<Page | null>} URL配列
+   */
+  public async getVirtualParentPage(parent: Page, walker: Walker): Promise<Page | null> {
+    // 親の参照数(1で直属の親)
+    const gen = walker.addParentGen
+    let page: Page | null = parent
+    for (let i = 0; i < gen; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      page = await PageRepository.findParent(page)
+    }
+
+    return page
+  }
+
   ///
 
   /**

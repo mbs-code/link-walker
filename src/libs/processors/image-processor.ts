@@ -26,9 +26,12 @@ export default class ImageProcessor {
     // 存在するPage URL を取り除く
     const newLinks = await agent.filteredNonExistUrls(links)
 
+    // 参照する親要素を推定
+    const virtualParent = await agent.getVirtualParentPage(parent, walker)
+
     // ディレクトリ作成
     const root = sanitize(agent.site.title ?? 'undefined')
-    const group = sanitize(parent?.title ?? 'undefined')
+    const group = sanitize(virtualParent?.title ?? 'undefined')
     const dirPath = await makeDir(path.join('./tmp/downloads', root, group))
 
     // 全要素について確認する
