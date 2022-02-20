@@ -11,22 +11,25 @@ datasource db {
 }
 
 model Site {
-  id    Int    @id @default(autoincrement())
-  key   String @unique
-  title String
-  url   String
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  title     String
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   pages  Page[]
   queues Queue[]
 }
 
 model Page {
-  id     Int  @id @default(autoincrement())
-  siteId Int
-  pageId Int?
-
-  url   String
-  title String?
+  id        Int      @id @default(autoincrement())
+  siteId    Int
+  pageId    Int? // 親ページ
+  url       String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   site     Site?   @relation(fields: [siteId], references: [id])
   parent   Page?   @relation("SubCategories", fields: [pageId], references: [id])
@@ -35,11 +38,12 @@ model Page {
 }
 
 model Queue {
-  id     Int @id @default(autoincrement())
-  siteId Int
-  pageId Int
-
-  priority Int @default(0)
+  id        Int      @id @default(autoincrement())
+  siteId    Int
+  pageId    Int
+  priority  Int      @default(0) // 処理優先度
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   site Site? @relation(fields: [siteId], references: [id])
   page Page? @relation(fields: [pageId], references: [id])
