@@ -16,6 +16,24 @@ export type PageParams = {
 
 export default class QueueRepository {
   /**
+   * サイトのキューをすべて取得する.
+   *
+   * @param {Site} site サイト情報
+   * @returns {Promise<Queue[]>} DBに存在したキュー配列
+   */
+  public static async findAll(site: Site): Promise<Queue[]> {
+    // 存在するキューをすべて取得する
+    const queues = await prisma.queue.findMany({
+      where: { siteId: site.id },
+      orderBy: [{ priority: 'desc' }, { id: 'asc' }],
+    })
+
+    return queues
+  }
+
+  ///
+
+  /**
    * キューの先頭からページを取り出す.
    *
    * @param {Site} site サイト情報

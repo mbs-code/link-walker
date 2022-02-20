@@ -3,7 +3,7 @@ import SiteConfigLoader from '../apps/site-config-loader'
 import Logger from '../utils/logger'
 
 export default class Run extends Command {
-  static description = 'Walk site link'
+  static description = 'Walking site links.'
 
   static examples = ['<%= config.bin %> <%= command.id %>']
 
@@ -20,24 +20,24 @@ export default class Run extends Command {
     const { args, flags } = await this.parse(Run)
 
     // 実処理インスタンスを作成
-    const walk = await SiteConfigLoader.load(args.file, {
+    const manager = await SiteConfigLoader.load(args.file, {
       peek: flags.peek,
     })
 
     // キューのリセット処理
     if (flags.clear) {
       Logger.info('🔄 Reset queue & Clear page.')
-      await walk.clearPage()
+      await manager.clearPage()
     } else if (flags.reset) {
       Logger.info('🔄 Reset queue.')
-      await walk.resetQueue()
+      await manager.resetQueue()
     }
 
     // 実行する
     Logger.info('🔄 Run walking site...')
     for (let i = 0; i < flags.time; i++) {
       // eslint-disable-next-line no-await-in-loop
-      await walk.step()
+      await manager.step()
     }
 
     // TODO: 仮

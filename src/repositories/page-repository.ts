@@ -45,7 +45,23 @@ export default class PageRepository {
   }
 
   /**
-   * 親ページを取得する..
+   * サイトのページをすべて取得する.
+   *
+   * @param {Site} site サイト情報
+   * @returns {Promise<Page[]>} DBに存在したページ配列
+   */
+  public static async findAll(site: Site): Promise<Page[]> {
+    // 存在するページをすべて取得する
+    const pages = await prisma.page.findMany({
+      where: { siteId: site.id },
+      orderBy: [{ id: 'asc' }],
+    })
+
+    return pages
+  }
+
+  /**
+   * 親ページを取得する.
    *
    * @param {Page} page ページ要素
    * @returns {Promise<Page | null>} DBに存在したページ

@@ -1,4 +1,4 @@
-import { Site } from '@prisma/client'
+import { Page, Queue, Site } from '@prisma/client'
 import { SiteConfig } from '../apps/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
@@ -11,6 +11,13 @@ import WalkSwitcher from './walk-switcher'
 
 export type WalkOption = {
   peek?: boolean
+}
+
+export type WalkDump = {
+  config: SiteConfig
+  site: Site
+  pages: Page[]
+  queues: Queue[]
 }
 
 export default class WalkManager {
@@ -89,5 +96,26 @@ export default class WalkManager {
 
     // ルート要素をキューに入れる
     await this.agent.insertQueueByRoot()
+  }
+
+  ///
+
+  /**
+   * 管理データをすべてダンプする.
+   *
+   * @returns {Promise<WalkDump>} ダンプデータ
+   */
+  public async dump(): Promise<WalkDump> {
+    // DBの要素をすべて取り出す
+    const pages = await PageRepository.findAll(this.site)
+    const queues = await QueueRepository.findAll(this.site)
+
+    return {
+      config: this.config,
+
+      site: this.site,
+      pages: pages,
+      queues: queues,
+    }
   }
 }
