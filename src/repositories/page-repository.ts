@@ -19,17 +19,38 @@ export default class PageRepository {
   }
 
   /**
+   * URLに該当するページをすべて取得する.
+   *
+   * @param {Site} site サイト情報
+   * @param {string[]} urls URL配列
+   * @returns {Page[]} DBに存在したページ配列
+   */
+  public static async findMany(site: Site, urls: string[]): Promise<Page[]> {
+    // 存在するページをすべて取得する
+    const pages = await prisma.page.findMany({
+      where: {
+        siteId: site.id,
+        url: { in: urls },
+      },
+    })
+
+    return pages
+  }
+
+  /**
    * 値からページを作成・更新する.
    *
    * @param {Site} site サイト情報
    * @param {string} url URL
    * @param {string?} title ページタイトル
+   * @param {Page?} parent 親要素
    * @returns {Promise<Page>} 作成・更新したページ
    */
-  public static async upsertRaw(site: Site, url: string, title?: string): Promise<Page> {
+  public static async upsertRaw(site: Site, url: string, title?: string, parent?: Page): Promise<Page> {
     // TODO: upsert と共通化したい
     const data = {
       siteId: site.id,
+      pageId: parent?.id ?? null,
       url: url,
       title: title,
     }

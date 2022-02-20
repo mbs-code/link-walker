@@ -1,7 +1,6 @@
 import { Page, PrismaClient, Queue, Site } from '@prisma/client'
 import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
-import PageRepository from './page-repository'
 
 const prisma = new PrismaClient()
 
@@ -38,18 +37,15 @@ export default class QueueRepository {
   }
 
   /**
-   * URLをキューに追加する.
+   * 新しいURLをキューに追加する.
    *
-   * @param {string} url URL
+   * 最適化のため、DBに追加されているかは確認していません。
    * @param {Site} site サイト情報
+   * @param {string} url URL
    * @param {Page} parent 追加するページ
    * @returns {Promise<PageWithQueue | null>} キュー
    */
-  public static async addQueue(url: string, site: Site, parent?: Page): Promise<PageWithQueue | null> {
-    // Page が存在するか確認する
-    const exists = await PageRepository.findOne(site, url)
-    if (exists) return null
-
+  public static async addQueueByNewUrl(site: Site, url: string, parent?: Page): Promise<PageWithQueue | null> {
     // page の作成とキューの追加
     const page = await prisma.page.create({
       data: {
@@ -66,7 +62,7 @@ export default class QueueRepository {
     })
 
     const queue = page.queues[0]
-    Logger.trace('> <%s> db:create:queue [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
+    Logger.trace('> <%s> db:create:queue:page [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
 
     return page
   }

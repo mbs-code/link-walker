@@ -2,6 +2,7 @@ import got from 'got'
 import cheerio, { CheerioAPI } from 'cheerio'
 import Logger from './logger'
 import prettyBytes from 'pretty-bytes'
+import { Blob } from 'buffer'
 
 export default class HttpUtil {
   /**
@@ -11,7 +12,7 @@ export default class HttpUtil {
    * @returns {Promise<CheerioAPI>} DOM Object
    */
   public static async fetch(url: string | URL): Promise<CheerioAPI> {
-    Logger.debug('url: "%s"', url)
+    Logger.trace('web:url:fetch "%s"', url)
 
     // HTTP GET
     const response = await got(url, {
@@ -20,11 +21,37 @@ export default class HttpUtil {
       },
     })
     const size = prettyBytes(response.rawBody.byteLength)
-    Logger.debug('size: %s', size)
+    Logger.trace('> web:size: %s', size)
 
     // DOM解析
     const $ = cheerio.load(response.body)
 
     return $
+  }
+
+  /**
+   * HTTP GET を行いBlob Bufferを取得する.
+   *
+   * @param {string | URL} url URL
+   * @returns {Promise<Buffer>} Blob Buffer
+   */
+  public static async blob(url: string | URL): Promise<Buffer> {
+    Logger.trace('> web:url:blob "%s"', url)
+
+    // HTTP GET
+    const response = await got(url, {
+      responseType: 'buffer',
+      headers: {
+        'user-agent': 'Mozilla/5.0', // TODO: .env に入れる
+      },
+    })
+    const size = prettyBytes(response.rawBody.byteLength)
+    Logger.trace('> web:size: %s', size)
+
+    // blob 化
+    const blob = new Blob([response.body])
+    const buffer = Buffer.from(await blob.arrayBuffer())
+
+    return buffer
   }
 }
