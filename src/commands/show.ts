@@ -1,4 +1,4 @@
-import { Command } from '@oclif/core'
+import { Command, Flags } from '@oclif/core'
 import { Site, Queue, Page } from '@prisma/client'
 import { cli } from 'cli-ux'
 import SiteConfigLoader from '../apps/site-config-loader'
@@ -13,14 +13,19 @@ export default class Show extends Command {
 
   static examples = ['<%= config.bin %> <%= command.id %>']
 
+  static flags = {
+    all: Flags.boolean({ description: 'Show all status.' }),
+    tree: Flags.boolean({ description: 'Show page tree.' }),
+    config: Flags.boolean({ description: 'Show config file.' }),
+  }
+
   static args = [{ name: 'file', required: false }]
 
   public async run(): Promise<void> {
-    const { args } = await this.parse(Show)
+    const { args, flags } = await this.parse(Show)
 
     // もし file が指定されなかったら List の alias を貼る
     if (!args.file) {
-      this.log('Alias: list %s', args.file)
       await List.run()
       return
     }
@@ -43,14 +48,18 @@ export default class Show extends Command {
     this.showQueueList(pages, queues)
 
     // ページ要素
-    this.log()
-    this.log('▶ page tree (%d)', pages.length)
-    this.showPageTree(pages)
+    if (flags.all || flags.tree) {
+      this.log()
+      this.log('▶ page tree (%d)', pages.length)
+      this.showPageTree(pages)
+    }
 
     // サイトコンフィグ
-    this.log()
-    this.log('▶ config yaml')
-    this.log(JSON.stringify(config, null, 2))
+    if (flags.all || flags.config) {
+      this.log()
+      this.log('▶ config yaml')
+      this.log(JSON.stringify(config, null, 2))
+    }
   }
 
   protected showSiteInfo(site: Site | null, pages: Page[], queues: Queue[]): void {

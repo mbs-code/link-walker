@@ -27,8 +27,11 @@ export default class Run extends Command {
 
     // もし status が有効なら Show の Alias を貼る
     if (flags.status) {
-      this.log('Alias: run %s', args.file)
-      await Show.run([args.file])
+      const fgs = []
+      if (flags.all) fgs.push('--all')
+      if (flags.tree) fgs.push('--tree')
+      if (flags.config) fgs.push('--config')
+      await Show.run([args.file, ...fgs])
       return
     }
 
