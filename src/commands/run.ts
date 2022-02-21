@@ -1,52 +1,62 @@
 import { Command, Flags } from '@oclif/core'
-import WalkManager from '../libs/walk-manager'
-import SiteRepository from '../repositories/site-repository'
-import DumpUtil from '../utils/dump-util'
+import SiteConfigLoader from '../apps/site-config-loader'
 import Logger from '../utils/logger'
+import Show from './show'
 
 export default class Run extends Command {
-  static description = 'Walk site link'
+  static description = `Walking site links.
+  You can extract links and download objects step by step.
+  Please set the processing in the config.yaml file.`
 
   static examples = ['<%= config.bin %> <%= command.id %>']
 
   static flags = {
-    time: Flags.integer({ char: 't', description: 'Number of times.', default: 1 }),
+    step: Flags.integer({ char: 's', description: 'Number of steps.', default: 1 }),
     peek: Flags.boolean({ char: 'p', description: 'Peek when deque.' }),
     clear: Flags.boolean({ char: 'c', description: 'Reset queue & Clear pages.' }),
     reset: Flags.boolean({ char: 'r', description: 'Reset queue.' }),
+
+    status: Flags.boolean({ description: "[Alias] Show site status. (Don't run)" }),
+    ...Show.flags,
   }
 
-  static args = [{ name: 'code', required: true, description: 'site ID or KEY' }]
+  static args = [{ name: 'file', required: true, description: 'site config.yaml' }]
 
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Run)
 
-    // DBからサイト情報を取ってくる
-    const site = await SiteRepository.findOrFail(args.code)
-    Logger.info('📝 %s', DumpUtil.site(site))
+    // もし status が有効なら Show の Alias を貼る
+    if (flags.status) {
+      const fgs = []
+      if (flags.all) fgs.push('--all')
+      if (flags.tree) fgs.push('--tree')
+      if (flags.config) fgs.push('--config')
+      await Show.run([args.file, ...fgs])
+      return
+    }
 
-    // 処理実態を作成
-    const walk = new WalkManager(site, {
+    // 実処理インスタンスを作成
+    const manager = await SiteConfigLoader.load(args.file, {
       peek: flags.peek,
     })
 
     // キューのリセット処理
     if (flags.clear) {
       Logger.info('🔄 Reset queue & Clear page.')
-      await walk.clearPage()
+      await manager.clearPage()
     } else if (flags.reset) {
       Logger.info('🔄 Reset queue.')
-      await walk.resetQueue()
+      await manager.resetQueue()
     }
 
     // 実行する
     Logger.info('🔄 Run walking site...')
-    for (let i = 0; i < flags.time; i++) {
+    for (let i = 0; i < flags.step; i++) {
       // eslint-disable-next-line no-await-in-loop
-      await walk.step()
+      await manager.step()
     }
 
     // TODO: 仮
-    Logger.info('✅ Walked! %s', DumpUtil.site(site))
+    // Logger.info('✅ Walked! %s', DumpUtil.site(site))
   }
 }

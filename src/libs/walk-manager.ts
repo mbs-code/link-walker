@@ -1,29 +1,42 @@
+import { Page, Queue, Site } from '@prisma/client'
+import { SiteConfig } from '../apps/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
-import { SiteWithWalkers } from '../repositories/site-repository'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
 import ImageProcessor from './processors/image-processor'
 import WalkAgent from './walk-agent'
+import WalkSwitcher from './walk-switcher'
 
-export type WalkOptions = {
+export type WalkOption = {
   peek?: boolean
 }
 
+export type WalkDump = {
+  config: SiteConfig
+  site: Site
+  pages: Page[]
+  queues: Queue[]
+}
+
 export default class WalkManager {
-  private site: SiteWithWalkers
+  private config: SiteConfig
+  private site: Site
   private usePeek: boolean
 
-  private agent: WalkAgent
+  private switcher: WalkSwitcher
+  private agent: WalkAgent // processor がアクセスする先
 
   private processors = {
     extract: new ExtractProcessor(),
     image: new ImageProcessor(),
   }
 
-  constructor(site: SiteWithWalkers, options?: WalkOptions) {
+  constructor(config: SiteConfig, site: Site, options?: WalkOption) {
+    this.config = config
     this.site = site
+    this.switcher = new WalkSwitcher(config)
     this.agent = new WalkAgent(site)
 
     this.usePeek = options?.peek ?? false
@@ -47,29 +60,12 @@ export default class WalkManager {
     // タイトルが取れたら保存しておく
     const title = $('title').text()
     if (title) {
-      page.title = title
+      page.title = title.replace(/\r?\n/g, '').trim() // 改行コード、前後のスペースは消す
       page = await PageRepository.upsert(this.site, page)
     }
 
-    // 一致する walker に対して処理をする
-    for await (const walker of this.site.walkers) {
-      const matcher = new RegExp(walker.urlPattern)
-      if (matcher.test(page.url)) {
-        Logger.debug('🔍 walker: <%s> %s', walker.name, walker.processor)
-
-        // プロセッサーを実行
-        switch (walker.processor) {
-          case 'extract':
-            await this.processors.extract.exec($, page, walker, this.agent)
-            break
-          case 'image':
-            await this.processors.image.exec($, page, walker, this.agent)
-            break
-          default:
-            throw new ReferenceError(`${walker.processor} is not defined.`)
-        }
-      }
-    }
+    // 一致する processor を選んで実行する
+    await this.switcher.exec(this.agent, page, $)
   }
 
   /**
@@ -100,5 +96,26 @@ export default class WalkManager {
 
     // ルート要素をキューに入れる
     await this.agent.insertQueueByRoot()
+  }
+
+  ///
+
+  /**
+   * 管理データをすべてダンプする.
+   *
+   * @returns {Promise<WalkDump>} ダンプデータ
+   */
+  public async dump(): Promise<WalkDump> {
+    // DBの要素をすべて取り出す
+    const pages = await PageRepository.findAll(this.site)
+    const queues = await QueueRepository.findAll(this.site)
+
+    return {
+      config: this.config,
+
+      site: this.site,
+      pages: pages,
+      queues: queues,
+    }
   }
 }

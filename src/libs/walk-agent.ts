@@ -1,15 +1,15 @@
-import { Page, Walker } from '@prisma/client'
+import { Page, Site } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
+import { WalkerConfig } from '../apps/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
-import { SiteWithWalkers } from '../repositories/site-repository'
 import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 export default class WalkAgent {
-  public site: SiteWithWalkers
+  public site: Site
 
-  constructor(site: SiteWithWalkers) {
+  constructor(site: Site) {
     this.site = site
   }
 
@@ -17,10 +17,10 @@ export default class WalkAgent {
    * DOM から URL を抽出する.
    *
    * @param {CheerioAPI} $ DOM 要素
-   * @param {Walker} walker 使用している walker
+   * @param {WalkerConfig} walker 使用している walker 設定
    * @returns {string[]} URL配列
    */
-  public async extractLinks($: CheerioAPI, walker: Walker): Promise<string[]> {
+  public async extractLinks($: CheerioAPI, walker: WalkerConfig): Promise<string[]> {
     // set で重複禁止
     const set = new Set<string>()
 
@@ -37,7 +37,6 @@ export default class WalkAgent {
     // 配列に変換
     let links = [...set]
     Logger.debug('> <%s> extract links: %d items', this.site.key, links.length)
-    Logger.trace(JSON.stringify(links))
 
     // URL フィルターを通す
     const urlFilter = walker.urlFilter
@@ -46,7 +45,6 @@ export default class WalkAgent {
       links = links.filter((link) => matcher.test(link))
 
       Logger.debug('> <%s> filtered links: %d items', this.site.key, links.length)
-      Logger.trace(JSON.stringify(links))
     }
 
     return links
@@ -66,7 +64,6 @@ export default class WalkAgent {
     const nonExistUrls = urls.filter((url) => !dbPages.some((page) => page.url === url))
 
     Logger.debug('> <%s> filtered new links: %d items', this.site.key, nonExistUrls.length)
-    Logger.trace(JSON.stringify(nonExistUrls))
 
     return nonExistUrls
   }
@@ -74,14 +71,14 @@ export default class WalkAgent {
   /**
    * 親要素とするページを取得.
    *
-   * 設定によってgenerationをたどる
-   * @param {Page}parent 基準となる親ページ
-   * @param {Walker} walker 使用している walker
+   * 設定によってgenerationをたどる。
+   * @param {Page} parent 基準となるページ
+   * @param {WalkerConfig} walker 使用している walker 設定
    * @returns {Promise<Page | null>} URL配列
    */
-  public async getVirtualParentPage(parent: Page, walker: Walker): Promise<Page | null> {
+  public async getVirtualParentPage(parent: Page, walker: WalkerConfig): Promise<Page | null> {
     // 親の参照数(1で直属の親)
-    const gen = walker.addParentGen
+    const gen = walker.addParentGen ?? 0
     let page: Page | null = parent
     for (let i = 0; i < gen; i++) {
       // eslint-disable-next-line no-await-in-loop
@@ -111,12 +108,12 @@ export default class WalkAgent {
    * キューにURLを追加する.
    *
    * 既に処理したURLは無視されます。
-   * @param {Walker} walker Walkエージェント
+   * @param {WalkerConfig} walker 使用している walker 設定
    * @param {string[]} urls URL配列
    * @param {Page?} parent 親ページ要素
    * @returns {number} 追加に成功した数
    */
-  public async addQueues(walker: Walker, urls: string[], parent?: Page): Promise<number> {
+  public async addQueues(walker: WalkerConfig, urls: string[], parent?: Page): Promise<number> {
     // 既に存在するURLを取り除く
     const newLinks = await this.filteredNonExistUrls(urls)
 

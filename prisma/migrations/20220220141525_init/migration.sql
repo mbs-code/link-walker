@@ -3,21 +3,9 @@ CREATE TABLE "Site" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "key" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "url" TEXT NOT NULL
-);
-
--- CreateTable
-CREATE TABLE "Walker" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "siteId" INTEGER NOT NULL,
-    "name" TEXT NOT NULL,
-    "urlPattern" TEXT NOT NULL,
-    "processor" TEXT NOT NULL,
-    "urlFilter" TEXT,
-    "queryFilter" TEXT,
-    "priority" INTEGER NOT NULL DEFAULT 0,
-    "addParentGen" INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT "Walker_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "url" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
@@ -27,6 +15,8 @@ CREATE TABLE "Page" (
     "pageId" INTEGER,
     "url" TEXT NOT NULL,
     "title" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Page_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Page_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -37,6 +27,8 @@ CREATE TABLE "Queue" (
     "siteId" INTEGER NOT NULL,
     "pageId" INTEGER NOT NULL,
     "priority" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Queue_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT "Queue_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
