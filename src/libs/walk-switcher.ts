@@ -51,7 +51,7 @@ export default class walkSwitcher {
     // 一致する walker に対して処理をする
     for await (const walker of this.walkers) {
       if (walker.pattern.test(page.url)) {
-        Logger.debug('🔍 walker: <%s> %s', this.config.title, walker.config.name)
+        Logger.debug('🔍 walker: <%s> %s', this.config.title, walker.config.key)
 
         // プロセッサーを実行
         await walker.processor.exec(agent, page, $, walker.config)

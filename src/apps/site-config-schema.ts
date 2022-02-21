@@ -14,7 +14,7 @@ export type SiteConfig = {
 }
 
 export type WalkerConfig = {
-  name: string // 一意のキー
+  key: string // 一意のキー
   urlPattern: string // 実行するURLの正規表現
   processor: ProcessorType // 実行する処理
 
@@ -35,7 +35,7 @@ export const siteConfigSchema = Joi.object({
 
   walkers: Joi.array()
     .items({
-      name: Joi.string().required(),
+      key: Joi.string().required(),
       urlPattern: Joi.string().required(),
       processor: Joi.string()
         .valid(...processorTypeArray)
