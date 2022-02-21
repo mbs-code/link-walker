@@ -92,7 +92,7 @@ export default class PageRepository {
     // TODO: upsert と共通化したい
     const data = {
       siteId: site.id,
-      pageId: parent?.id ?? null,
+      parentId: parent?.id ?? null,
       url: url,
       title: title,
     }
