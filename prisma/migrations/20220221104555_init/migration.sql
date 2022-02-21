@@ -15,6 +15,8 @@ CREATE TABLE "Page" (
     "parentId" INTEGER,
     "url" TEXT NOT NULL,
     "title" TEXT,
+    "walker" TEXT,
+    "processor" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Page_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,

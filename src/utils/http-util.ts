@@ -49,4 +49,19 @@ export default class HttpUtil {
 
     return response.body
   }
+
+  ///
+
+  /**
+   * URL からファイル名を取り出す.
+   *
+   * @param {string} link URL
+   * @returns {string} ファイル名
+   */
+  public static parseLastname(link: string): string {
+    const u = new URL(link)
+    const pathname = u.pathname
+    const lastname = pathname.slice(Math.max(0, pathname.lastIndexOf('/') + 1))
+    return lastname
+  }
 }

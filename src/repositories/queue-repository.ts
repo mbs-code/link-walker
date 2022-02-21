@@ -60,46 +60,46 @@ export default class QueueRepository {
     return queue?.page ?? null
   }
 
-  /**
-   * 新しいURLをキューに追加する.
-   *
-   * 最適化のため、DBに追加されているかは確認していません。
-   * @param {Site} site サイト情報
-   * @param {PageParams} params ページパラメタ
-   * @param {number} priority キューの優先度
-   * @returns {Promise<PageWithQueue | null>} キュー
-   */
-  public static async addQueueByNewUrl(
-    site: Site,
-    params: PageParams,
-    priority?: number
-  ): Promise<PageWithQueue | null> {
-    // page の作成とキューの追加
-    const page = await prisma.page.create({
-      data: {
-        siteId: site.id,
-        parentId: params.parent?.id,
-        url: params.url,
-        title: params.title,
-        queues: {
-          create: [
-            {
-              siteId: site.id,
-              priority: priority,
-            },
-          ],
-        },
-      },
-      include: {
-        queues: true,
-      },
-    })
+  // /**
+  //  * 新しいURLをキューに追加する.
+  //  *
+  //  * 最適化のため、DBに追加されているかは確認していません。
+  //  * @param {Site} site サイト情報
+  //  * @param {PageParams} params ページパラメタ
+  //  * @param {number} priority キューの優先度
+  //  * @returns {Promise<PageWithQueue | null>} キュー
+  //  */
+  // public static async addQueueByNewUrl(
+  //   site: Site,
+  //   params: PageParams,
+  //   priority?: number
+  // ): Promise<PageWithQueue | null> {
+  //   // page の作成とキューの追加
+  //   const page = await prisma.page.create({
+  //     data: {
+  //       siteId: site.id,
+  //       parentId: params.parent?.id,
+  //       url: params.url,
+  //       title: params.title,
+  //       queues: {
+  //         create: [
+  //           {
+  //             siteId: site.id,
+  //             priority: priority,
+  //           },
+  //         ],
+  //       },
+  //     },
+  //     include: {
+  //       queues: true,
+  //     },
+  //   })
 
-    const queue = page.queues[0]
-    Logger.trace('> <%s> db:create:queue:page [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
+  //   const queue = page.queues[0]
+  //   Logger.trace('> <%s> db:create:queue:page [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
 
-    return page
-  }
+  //   return page
+  // }
 
   /**
    * ページをキューに追加する.

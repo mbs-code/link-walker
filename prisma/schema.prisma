@@ -28,6 +28,8 @@ model Page {
   parentId  Int? // 親ページ
   url       String
   title     String?
+  walker    String? // 使用した worker
+  processor String? // 使用した processor
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
