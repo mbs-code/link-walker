@@ -109,7 +109,7 @@ export default class Show extends Command {
       let parent = page
       while (parent) {
         // 親要素の探索
-        const exist = pages.find((p) => p.id === parent.pageId)
+        const exist = pages.find((p) => p.id === parent.parentId)
         if (!exist) break
 
         stack.unshift(DumpUtil.page(exist))

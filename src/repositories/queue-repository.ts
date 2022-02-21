@@ -78,7 +78,7 @@ export default class QueueRepository {
     const page = await prisma.page.create({
       data: {
         siteId: site.id,
-        pageId: params.parent?.id,
+        parentId: params.parent?.id,
         url: params.url,
         title: params.title,
         queues: {

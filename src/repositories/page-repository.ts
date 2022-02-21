@@ -70,7 +70,7 @@ export default class PageRepository {
     // 親のページが存在するか確認する
     const parent = await prisma.page.findUnique({
       where: {
-        id: page?.pageId ?? 0,
+        id: page?.parentId ?? 0,
       },
     })
 

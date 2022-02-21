@@ -25,14 +25,14 @@ model Site {
 model Page {
   id        Int      @id @default(autoincrement())
   siteId    Int
-  pageId    Int? // 親ページ
+  parentId  Int? // 親ページ
   url       String
   title     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   site     Site?   @relation(fields: [siteId], references: [id])
-  parent   Page?   @relation("SubCategories", fields: [pageId], references: [id])
+  parent   Page?   @relation("SubCategories", fields: [parentId], references: [id])
   children Page[]  @relation("SubCategories")
   queues   Queue[]
 }
