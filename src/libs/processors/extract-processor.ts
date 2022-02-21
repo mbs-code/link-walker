@@ -1,7 +1,7 @@
 import { Page } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
 import sleep from 'sleep-promise'
-import { WalkerConfig } from '../../apps/site-config-schema'
+import { WalkerConfig } from '../../loaders/site-config-schema'
 import WalkAgent from '../walk-agent'
 import BaseProcessor from './base-processor'
 

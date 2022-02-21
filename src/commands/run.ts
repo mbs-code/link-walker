@@ -1,5 +1,5 @@
 import { Command, Flags } from '@oclif/core'
-import SiteConfigLoader from '../apps/site-config-loader'
+import SiteConfigLoader from '../loaders/site-config-loader'
 import Logger from '../utils/logger'
 import Show from './show'
 

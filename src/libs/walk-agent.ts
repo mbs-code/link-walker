@@ -1,6 +1,6 @@
 import { Page, Site } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
-import { WalkerConfig } from '../apps/site-config-schema'
+import { WalkerConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
 import DumpUtil from '../utils/dump-util'

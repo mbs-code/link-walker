@@ -1,7 +1,7 @@
 import { Command, Flags } from '@oclif/core'
 import { Site, Queue, Page } from '@prisma/client'
 import { cli } from 'cli-ux'
-import SiteConfigLoader from '../apps/site-config-loader'
+import SiteConfigLoader from '../loaders/site-config-loader'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
 import SiteRepository from '../repositories/site-repository'

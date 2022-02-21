@@ -1,6 +1,6 @@
 import { Page } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
-import { ProcessorType, SiteConfig, WalkerConfig } from '../apps/site-config-schema'
+import { ProcessorType, SiteConfig, WalkerConfig } from '../loaders/site-config-schema'
 import Logger from '../utils/logger'
 import BaseProcessor from './processors/base-processor'
 import ExtractProcessor from './processors/extract-processor'

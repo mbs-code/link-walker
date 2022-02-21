@@ -45,6 +45,6 @@ export const siteConfigSchema = Joi.object({
       priority: Joi.number().min(0).max(65_535),
       addParentGen: Joi.number().min(0),
     })
-    .unique('name')
+    .unique('key')
     .required(),
 })

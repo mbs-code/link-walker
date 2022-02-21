@@ -1,7 +1,5 @@
 import { PrismaClient, Site } from '@prisma/client'
-import { SiteConfig } from '../apps/site-config-schema'
-// import DumpUtil from '../utils/dump-util'
-// import Logger from '../utils/logger'
+import { SiteConfig } from '../loaders/site-config-schema'
 
 const prisma = new PrismaClient()
 

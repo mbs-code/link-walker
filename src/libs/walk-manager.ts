@@ -1,5 +1,5 @@
 import { Page, Queue, Site } from '@prisma/client'
-import { SiteConfig } from '../apps/site-config-schema'
+import { SiteConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
 import HttpUtil from '../utils/http-util'
