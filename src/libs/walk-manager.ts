@@ -2,6 +2,7 @@ import { Page, Queue, Site } from '@prisma/client'
 import { SiteConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
+import SiteRepository from '../repositories/site-repository'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
@@ -49,9 +50,10 @@ export default class WalkManager {
    */
   public async step(): Promise<void> {
     // キューから一つ取り出す
-    let page = await QueueRepository.deque(this.site, this.usePeek)
-    if (!page) throw new ReferenceError('queue is empty.')
+    const queue = await QueueRepository.peek(this.site)
+    if (!queue) throw new ReferenceError('queue is empty.')
 
+    let page = queue.page
     Logger.debug('STEP <%s> %s', this.site.key, page.url)
 
     // dom に変換
@@ -65,7 +67,13 @@ export default class WalkManager {
     }
 
     // 一致する processor を選んで実行する
-    await this.switcher.exec(this.agent, page, $)
+    const result = await this.switcher.exec(this.agent, page, $)
+
+    // キューからページを削除する
+    await QueueRepository.remove(this.site, queue)
+
+    // サイトに統計情報を記録する
+    this.site = await SiteRepository.updateStats(this.site, result)
   }
 
   /**

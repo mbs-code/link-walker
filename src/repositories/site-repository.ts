@@ -1,4 +1,5 @@
 import { PrismaClient, Site } from '@prisma/client'
+import { WalkResult } from '../libs/walk-switcher'
 import { SiteConfig } from '../loaders/site-config-schema'
 
 const prisma = new PrismaClient()
@@ -31,14 +32,37 @@ export default class SiteRepository {
     return sites
   }
 
+  ///
+
   /**
-   * SiteConfig を使ってレコードを保存する.
+   * サイトの統計情報を更新する.
+   *
+   * @param {Site} site サイト
+   * @param {WalkResult} result walk処理の結果
+   * @returns {Promise<Site>} 更新したサイトレコード
+   */
+  public static async updateStats(site: Site, result: WalkResult): Promise<Site> {
+    const updSite = await prisma.site.update({
+      where: { id: site.id },
+      data: {
+        cntStep: { increment: 1 },
+        cntWalker: { increment: result.walker },
+        cntExtract: { increment: result.extract },
+        cntImage: { increment: result.image },
+      },
+    })
+
+    return updSite
+  }
+
+  /**
+   * SiteConfig を使ってレコードを保存して、再取得.
    *
    * key を基準に更新します。
    * @param {SiteConfig} siteConfig サイト設定
    * @returns {Promise<Site>} 保存後のSiteレコード
    */
-  public static async upsert(siteConfig: SiteConfig): Promise<Site> {
+  public static async upsertByConfig(siteConfig: SiteConfig): Promise<Site> {
     // 更新用データ構築
     const data = {
       key: siteConfig.key,

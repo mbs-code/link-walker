@@ -30,7 +30,7 @@ export default class SiteConfigLoader {
     const config = await SiteConfigLoader.loadfile(filePath)
 
     // DB インスタンス探索
-    const site = await SiteRepository.upsert(config)
+    const site = await SiteRepository.upsertByConfig(config)
     Logger.info('💾 DB %s', DumpUtil.site(site))
 
     // 実処理インスタンス を作成

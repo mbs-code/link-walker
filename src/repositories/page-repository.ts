@@ -86,34 +86,6 @@ export default class PageRepository {
 
   ///
 
-  // /**
-  //  * 値からページを作成・更新する.
-  //  *
-  //  * @param {Site} site サイト情報
-  //  * @param {string} url URL
-  //  * @param {PageProps} props ページの非必須属性
-  //  * @returns {Promise<Page>} 作成・更新したページ
-  //  */
-  // public static async upsertRaw(site: Site, url: string, props: PageProps = {}): Promise<Page> {
-  //   const item = {
-  //     siteId: site.id,
-  //     url: url,
-  //     ...props,
-  //   }
-
-  //   // unique要素でしか検索できないため、IDを探してから upsert する
-  //   const exists = await PageRepository.findOne(site, url)
-  //   const page = await prisma.page.upsert({
-  //     where: { id: exists?.id ?? 0 },
-  //     create: item,
-  //     update: item,
-  //   })
-
-  //   Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(page))
-
-  //   return page
-  // }
-
   /**
    * ページを作成・更新する.
    *

@@ -7,6 +7,8 @@ import ExtractProcessor from './processors/extract-processor'
 import ImageProcessor from './processors/image-processor'
 import WalkAgent from './walk-agent'
 
+export type WalkResult = Record<ProcessorType | 'walker', number>
+
 export default class walkSwitcher {
   // プロセッサーの実体
   protected processors: Record<ProcessorType, BaseProcessor> = {
@@ -45,9 +47,15 @@ export default class walkSwitcher {
    * @param {WalkAgent} agent Walk エージェント
    * @param {Page} page ページ
    * @param {CheerioAPI} $ ページの DOM 要素
-   * @returns void
+   * @returns {Promise<WalkResult>} 処理結果統計
    */
-  public async exec(agent: WalkAgent, page: Page, $: CheerioAPI): Promise<void> {
+  public async exec(agent: WalkAgent, page: Page, $: CheerioAPI): Promise<WalkResult> {
+    const result: WalkResult = {
+      walker: 0,
+      extract: 0,
+      image: 0,
+    }
+
     // 一致する walker に対して処理をする
     for await (const walker of this.walkers) {
       if (walker.pattern.test(page.url)) {
@@ -55,7 +63,11 @@ export default class walkSwitcher {
 
         // プロセッサーを実行
         await walker.processor.exec(agent, page, $, walker.config)
+        result.walker++
+        result[walker.config.processor]++
       }
     }
+
+    return result
   }
 }

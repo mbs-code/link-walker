@@ -4,6 +4,10 @@ CREATE TABLE "Site" (
     "key" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "url" TEXT NOT NULL,
+    "cntStep" INTEGER NOT NULL DEFAULT 0,
+    "cntWalker" INTEGER NOT NULL DEFAULT 0,
+    "cntExtract" INTEGER NOT NULL DEFAULT 0,
+    "cntImage" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
