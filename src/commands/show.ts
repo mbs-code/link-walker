@@ -71,6 +71,10 @@ export default class Show extends Command {
         url: site?.url,
         pages: pages.length,
         queues: queues.length,
+        step: site?.cntStep,
+        walker: site?.cntWalker,
+        extract: site?.cntExtract,
+        image: site?.cntImage,
         lastRunAt: site?.updatedAt.toLocaleString(),
       },
     ]
@@ -82,6 +86,10 @@ export default class Show extends Command {
       url: {},
       pages: {},
       queues: {},
+      step: {},
+      walker: {},
+      extract: {},
+      image: {},
       lastRunAt: { header: 'LastRunAt' },
     })
   }
@@ -112,7 +120,7 @@ export default class Show extends Command {
         const exist = pages.find((p) => p.id === parent.parentId)
         if (!exist) break
 
-        stack.unshift(DumpUtil.page(exist))
+        stack.unshift(this.pageString(exist))
         parent = exist
       }
 
@@ -122,10 +130,17 @@ export default class Show extends Command {
         t = t.nodes[str]
       }
 
-      t.insert(DumpUtil.page(page))
+      t.insert(this.pageString(page))
     }
 
     tree.display()
+  }
+
+  protected pageString(page: Page) {
+    let icon = ''
+    if (page.processor === 'extract') icon = '♻︎'
+    if (page.processor === 'image') icon = '🎨'
+    return icon + DumpUtil.page(page)
   }
 
   ///
