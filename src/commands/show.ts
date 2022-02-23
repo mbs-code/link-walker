@@ -1,7 +1,7 @@
 import { Command, Flags } from '@oclif/core'
 import { Site, Queue, Page } from '@prisma/client'
 import { cli } from 'cli-ux'
-import SiteConfigLoader from '../apps/site-config-loader'
+import SiteConfigLoader from '../loaders/site-config-loader'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
 import SiteRepository from '../repositories/site-repository'
@@ -71,6 +71,11 @@ export default class Show extends Command {
         url: site?.url,
         pages: pages.length,
         queues: queues.length,
+        step: site?.cntStep ?? 0,
+        reset: site?.cntReset ?? 0,
+        walker: (site?.cntExtract ?? 0) + (site?.cntImage ?? 0),
+        extract: site?.cntExtract ?? 0,
+        image: site?.cntImage ?? 0,
         lastRunAt: site?.updatedAt.toLocaleString(),
       },
     ]
@@ -82,6 +87,11 @@ export default class Show extends Command {
       url: {},
       pages: {},
       queues: {},
+      step: {},
+      reset: {},
+      walker: {},
+      extract: {},
+      image: {},
       lastRunAt: { header: 'LastRunAt' },
     })
   }
@@ -109,10 +119,10 @@ export default class Show extends Command {
       let parent = page
       while (parent) {
         // 親要素の探索
-        const exist = pages.find((p) => p.id === parent.pageId)
+        const exist = pages.find((p) => p.id === parent.parentId)
         if (!exist) break
 
-        stack.unshift(DumpUtil.page(exist))
+        stack.unshift(this.pageString(exist))
         parent = exist
       }
 
@@ -122,10 +132,17 @@ export default class Show extends Command {
         t = t.nodes[str]
       }
 
-      t.insert(DumpUtil.page(page))
+      t.insert(this.pageString(page))
     }
 
     tree.display()
+  }
+
+  protected pageString(page: Page) {
+    let icon = ''
+    if (page.processor === 'extract') icon = '♻︎'
+    if (page.processor === 'image') icon = '🎨'
+    return icon + DumpUtil.page(page)
   }
 
   ///

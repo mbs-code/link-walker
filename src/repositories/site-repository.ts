@@ -1,7 +1,8 @@
 import { PrismaClient, Site } from '@prisma/client'
-import { SiteConfig } from '../apps/site-config-schema'
-// import DumpUtil from '../utils/dump-util'
-// import Logger from '../utils/logger'
+import { SiteConfig } from '../loaders/site-config-schema'
+import WalkerStat from '../stats/walker-stat'
+import DumpUtil from '../utils/dump-util'
+import Logger from '../utils/logger'
 
 const prisma = new PrismaClient()
 
@@ -33,14 +34,38 @@ export default class SiteRepository {
     return sites
   }
 
+  ///
+
   /**
-   * SiteConfig を使ってレコードを保存する.
+   * サイトの統計情報を更新する.
+   *
+   * @param {Site} site サイト
+   * @param {WalkerStat} stat 統計情報
+   * @returns {Promise<Site>} 更新したサイトレコード
+   */
+  public static async updateStats(site: Site, stat: WalkerStat): Promise<Site> {
+    const updSite = await prisma.site.update({
+      where: { id: site.id },
+      data: {
+        cntStep: { increment: 1 },
+        cntExtract: { increment: stat.extract },
+        cntImage: { increment: stat.image },
+        cntReset: { increment: stat.reset },
+      },
+    })
+
+    Logger.trace('<%s> [db:update:site] %s', site.key, DumpUtil.site(updSite))
+    return updSite
+  }
+
+  /**
+   * SiteConfig を使ってレコードを保存して、再取得.
    *
    * key を基準に更新します。
    * @param {SiteConfig} siteConfig サイト設定
    * @returns {Promise<Site>} 保存後のSiteレコード
    */
-  public static async upsert(siteConfig: SiteConfig): Promise<Site> {
+  public static async upsertByConfig(siteConfig: SiteConfig): Promise<Site> {
     // 更新用データ構築
     const data = {
       key: siteConfig.key,
@@ -55,6 +80,7 @@ export default class SiteRepository {
       update: data,
     })
 
+    Logger.trace('<%s> [db:update:site] %s', site.key, DumpUtil.site(site))
     return site
   }
 }

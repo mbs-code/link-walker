@@ -1,7 +1,10 @@
 import { Page, Queue, Site } from '@prisma/client'
-import { SiteConfig } from '../apps/site-config-schema'
+import { SiteConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
+import SiteRepository from '../repositories/site-repository'
+import WalkerStat from '../stats/walker-stat'
+import DumpUtil from '../utils/dump-util'
 import HttpUtil from '../utils/http-util'
 import Logger from '../utils/logger'
 import ExtractProcessor from './processors/extract-processor'
@@ -9,10 +12,12 @@ import ImageProcessor from './processors/image-processor'
 import WalkAgent from './walk-agent'
 import WalkSwitcher from './walk-switcher'
 
+/** walker 動作設定 */
 export type WalkOption = {
   peek?: boolean
 }
 
+/** ダンプデータ */
 export type WalkDump = {
   config: SiteConfig
   site: Site
@@ -45,27 +50,48 @@ export default class WalkManager {
   /**
    * 1ステップ実行する.
    *
-   * @returns void
+   * @param {Number} step ステップ回数
+   * @param {Number} maxStep 最大ステップ回数
+   * @returns {Promise<WalkerStat>} 統計
    */
-  public async step(): Promise<void> {
+  public async step(step: number, maxStep: number): Promise<WalkerStat> {
     // キューから一つ取り出す
-    let page = await QueueRepository.deque(this.site, this.usePeek)
-    if (!page) throw new ReferenceError('queue is empty.')
+    const queue = await QueueRepository.peek(this.site)
+    Logger.info('<%s> [%d/%d] STEP: %s', this.site.key, step, maxStep, DumpUtil.queue(queue, '--'))
 
-    Logger.debug('STEP <%s> %s', this.site.key, page.url)
+    // キューが空ならエラー（自動追加は無限ループになってしまう）
+    if (!queue) throw new ReferenceError('Queue is empty.')
 
-    // dom に変換
-    const $ = await HttpUtil.fetch(page.url)
+    // ページと親要素を取り出す(referrer のため)
+    let page = queue.page
+    const parent = await PageRepository.findParent(page)
 
-    // タイトルが取れたら保存しておく
-    const title = $('title').text()
-    if (title) {
-      page.title = title.replace(/\r?\n/g, '').trim() // 改行コード、前後のスペースは消す
-      page = await PageRepository.upsert(this.site, page)
+    // HTTP アクセスを行って DOM に変換する
+    const { $, title } = await HttpUtil.fetch(page.url, parent?.url)
+
+    // タイトルをページに書き込む
+    Logger.trace('<%s> Write title on page.', this.site.key)
+    page.title = title ?? ''
+    page = await PageRepository.upsert(this.site, page)
+
+    // ★ 一致する processor を選んで実行する
+    Logger.trace('<%s> Search walker.', this.site.key)
+    const stat = await this.switcher.exec(this.agent, page, $)
+
+    // キューからページを削除する
+    if (this.usePeek) {
+      Logger.trace('<%s> Skip Deque.', this.site.key)
+    } else {
+      Logger.trace('<%s> Deque.', this.site.key)
+      await QueueRepository.remove(this.site, queue)
     }
 
-    // 一致する processor を選んで実行する
-    await this.switcher.exec(this.agent, page, $)
+    // サイトに統計情報を記録する
+    Logger.trace('<%s> Update site stats.', this.site.key)
+    this.site = await SiteRepository.updateStats(this.site, stat)
+
+    Logger.info('<%s> [%d/%d] RESULT: %s', this.site.key, step, maxStep, stat.dump())
+    return stat
   }
 
   /**
@@ -74,13 +100,16 @@ export default class WalkManager {
    * @returns void
    */
   public async resetQueue(): Promise<void> {
-    Logger.debug('RESET QUEUE <%s>', this.site.key)
+    Logger.debug('<%s> Reset queue.', this.site.key)
 
     // キューを空にする
     await QueueRepository.clear(this.site)
 
     // ルート要素をキューに入れる
-    await this.agent.insertQueueByRoot()
+    const root = await this.agent.upsertRootPage()
+    await QueueRepository.addQueue(this.site, root)
+
+    Logger.debug('<%s> Enque root page. %s', this.site.key, DumpUtil.page(root))
   }
 
   /**
@@ -89,13 +118,16 @@ export default class WalkManager {
    * @returns void
    */
   public async clearPage(): Promise<void> {
-    Logger.debug('CLEAR ALL PAGE <%s>', this.site.key)
+    Logger.debug('<%s> Clear all page.', this.site.key)
 
     // ページ（とキュー）を空にする
     await PageRepository.clear(this.site)
 
     // ルート要素をキューに入れる
-    await this.agent.insertQueueByRoot()
+    const root = await this.agent.upsertRootPage()
+    await QueueRepository.addQueue(this.site, root)
+
+    Logger.debug('<%s> Enque root page. %s', this.site.key, DumpUtil.page(root))
   }
 
   ///

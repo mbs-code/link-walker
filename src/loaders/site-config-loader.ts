@@ -1,3 +1,4 @@
+import { Site } from '@prisma/client'
 import WalkManager, { WalkOption } from '../libs/walk-manager'
 import SiteRepository from '../repositories/site-repository'
 import DumpUtil from '../utils/dump-util'
@@ -14,29 +15,30 @@ export default class SiteConfigLoader {
   public static async loadfile(filePath: string): Promise<SiteConfig> {
     // ファイル読み込み
     const config = (await FileUtil.loadYaml(filePath, siteConfigSchema)) as SiteConfig
-    Logger.info('⚙ file %s', filePath)
+    Logger.debug('File loaded: %s', filePath)
 
     return config
   }
 
   /**
    * ファイルからサイトWalkerを生成する.
+   *
    * @param {string} filePath ファイルパス
    * @param {WalkOption} option 起動オプション
-   * @returns {Promise<WalkManager>} 実処理インスタンス
+   * @returns {Promise<{ manager: WalkManager, site: Site}>} 実処理インスタンス
    */
-  public static async load(filePath: string, option?: WalkOption): Promise<WalkManager> {
+  public static async load(filePath: string, option?: WalkOption): Promise<{ manager: WalkManager; site: Site }> {
     // ファイル読み込み
     const config = await SiteConfigLoader.loadfile(filePath)
 
-    // DB インスタンス探索
-    const site = await SiteRepository.upsert(config)
-    Logger.info('💾 DB %s', DumpUtil.site(site))
+    // DB インスタンス探索＆更新
+    const site = await SiteRepository.upsertByConfig(config)
+    Logger.debug('DB Loaded: %s', DumpUtil.site(site))
 
     // 実処理インスタンス を作成
-    const walk = new WalkManager(config, site, option)
-    Logger.debug('create walk insatance')
+    const manager = new WalkManager(config, site, option)
+    Logger.debug('Create walk insatance. %s', site.key)
 
-    return walk
+    return { manager, site }
   }
 }

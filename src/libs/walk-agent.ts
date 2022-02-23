@@ -1,9 +1,8 @@
-import { Page, Site } from '@prisma/client'
+import { Page, Queue, Site } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
-import { WalkerConfig } from '../apps/site-config-schema'
+import { WalkerConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
-import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 export default class WalkAgent {
@@ -25,8 +24,10 @@ export default class WalkAgent {
     const set = new Set<string>()
 
     // DOM から URL を抜き出す (指定が無ければURLっぽいの全部)
-    const query = walker.queryFilter ?? '[href],[src]'
-    $(query).each((i, el) => {
+    const domQuery = walker.queryFilter ?? '[href],[src]'
+    Logger.trace('<%s> [url:search] %s', this.site.key, domQuery)
+
+    $(domQuery).each((i, el) => {
       const href = $(el).attr('href')
       if (href) set.add(href)
 
@@ -36,7 +37,7 @@ export default class WalkAgent {
 
     // 配列に変換
     let links = [...set]
-    Logger.debug('> <%s> extract links: %d items', this.site.key, links.length)
+    Logger.trace('<%s> [url:extract] %d items', this.site.key, links.length)
 
     // URL フィルターを通す
     const urlFilter = walker.urlFilter
@@ -44,28 +45,37 @@ export default class WalkAgent {
       const matcher = new RegExp(urlFilter)
       links = links.filter((link) => matcher.test(link))
 
-      Logger.debug('> <%s> filtered links: %d items', this.site.key, links.length)
+      Logger.trace('<%s> [url:filter] %d items', this.site.key, links.length)
     }
 
     return links
   }
 
   /**
-   * DB に存在しないURLのみにフィルターする.
+   * 未処理のページか判定する
    *
-   * @param {string[]} urls URL配列
-   * @returns {Promise<Page | null>} 取得したページ
+   * @param {Page | null} page ページ
+   * @return {boolean} true で未処理のpage
    */
-  public async filteredNonExistUrls(urls: string[]): Promise<string[]> {
-    // DBを検索する
-    const dbPages = await PageRepository.findMany(this.site, urls)
+  public isUnprocessedPage(page?: Page | null): boolean {
+    if (page) {
+      return !page.walker && !page.processor
+    }
 
-    // DBに存在しないURLのみ返却する
-    const nonExistUrls = urls.filter((url) => !dbPages.some((page) => page.url === url))
+    return true
+  }
 
-    Logger.debug('> <%s> filtered new links: %d items', this.site.key, nonExistUrls.length)
+  ///
 
-    return nonExistUrls
+  /**
+   * ページを取得する.
+   *
+   * @param {string} url URL
+   * @returns {Promise<Page | null>} ページ要素
+   */
+  public async findPage(url: string): Promise<Page | null> {
+    const page = await PageRepository.findOne(this.site, url)
+    return page
   }
 
   /**
@@ -93,59 +103,52 @@ export default class WalkAgent {
   /**
    * ページを作成する.
    *
-   * 既に処理したURLは上書きされます。
+   * @param {WalkerConfig} walker 使用している walker 設定
    * @param {string} url URL
    * @param {string?} title タイトル
    * @param {Page?} parent 親ページ要素
    * @returns {number} 追加に成功した数
    */
-  public async createPage(url: string, title?: string, parent?: Page): Promise<Page> {
-    const page = await PageRepository.upsertRaw(this.site, url, title, parent)
+  public async upsertPage(walker: WalkerConfig, url: string, title?: string, parent?: Page): Promise<Page> {
+    const page = await PageRepository.upsert(this.site, {
+      siteId: this.site.id,
+      parentId: parent?.id ?? null,
+      url: url,
+      title: title ?? null,
+      walker: walker.key,
+      processor: walker.processor,
+    })
+
     return page
   }
 
   /**
-   * キューにURLを追加する.
+   * キューに追加する.
    *
-   * 既に処理したURLは無視されます。
    * @param {WalkerConfig} walker 使用している walker 設定
-   * @param {string[]} urls URL配列
-   * @param {Page?} parent 親ページ要素
-   * @returns {number} 追加に成功した数
+   * @param {Page} page 追加するページ
+   * @returns {Promise<Queue>} 追加したキュー
    */
-  public async addQueues(walker: WalkerConfig, urls: string[], parent?: Page): Promise<number> {
-    // 既に存在するURLを取り除く
-    const newLinks = await this.filteredNonExistUrls(urls)
-
-    // キューに追加する
-    let success = 0
-    for await (const link of newLinks) {
-      const page = await QueueRepository.addQueueByNewUrl(
-        this.site,
-        {
-          url: link,
-          parent: parent,
-        },
-        walker.priority
-      )
-
-      if (page) success++
-    }
-
-    Logger.debug('> <%s> add queue links: %d items', this.site.key, success)
-    return success
+  public async addQueue(walker: WalkerConfig, page: Page): Promise<Queue> {
+    const queue = await QueueRepository.addQueue(this.site, page, walker.priority)
+    return queue
   }
 
   /**
-   * キューにルートページを挿入する.
+   * ルートページを作成・更新して取得する.
    *
-   * @returns void
+   * @returns {Promise<Page>} ルートページ
    */
-  public async insertQueueByRoot(): Promise<void> {
-    // ルートページの作成＆キューに入れる
-    const rootPage = await PageRepository.upsertRaw(this.site, this.site.url, this.site.title)
-    await QueueRepository.addQueueByPage(this.site, rootPage)
-
-    Logger.debug('> <%s> add root page: %s', this.site.key, DumpUtil.page(rootPage))
+  public async upsertRootPage(): Promise<Page> {
+    // ルートページの作成＆更新
+    const rootPage = await PageRepository.upsert(this.site, {
+      siteId: this.site.id,
+      parentId: null,
+      url: this.site.url,
+      title: this.site.title,
+      walker: null,
+      processor: null,
+    })
+    return rootPage
   }
 }

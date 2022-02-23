@@ -1,6 +1,8 @@
 import { Page } from '@prisma/client'
 import { CheerioAPI } from 'cheerio'
-import { ProcessorType, SiteConfig, WalkerConfig } from '../apps/site-config-schema'
+import { ProcessorType, SiteConfig, WalkerConfig } from '../loaders/site-config-schema'
+import WalkerStat from '../stats/walker-stat'
+import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 import BaseProcessor from './processors/base-processor'
 import ExtractProcessor from './processors/extract-processor'
@@ -45,17 +47,25 @@ export default class walkSwitcher {
    * @param {WalkAgent} agent Walk エージェント
    * @param {Page} page ページ
    * @param {CheerioAPI} $ ページの DOM 要素
-   * @returns void
+   * @returns {Promise<WalkResult>} 処理結果
    */
-  public async exec(agent: WalkAgent, page: Page, $: CheerioAPI): Promise<void> {
+  public async exec(agent: WalkAgent, page: Page, $: CheerioAPI): Promise<WalkerStat> {
+    const stat = new WalkerStat()
+
     // 一致する walker に対して処理をする
     for await (const walker of this.walkers) {
       if (walker.pattern.test(page.url)) {
-        Logger.debug('🔍 walker: <%s> %s', this.config.title, walker.config.name)
+        Logger.debug('<%s> ▶ Walker: %s', this.config.key, DumpUtil.walker(walker.config))
 
         // プロセッサーを実行
-        await walker.processor.exec(agent, page, $, walker.config)
+        const proStat = await walker.processor.exec(agent, page, $, walker.config)
+        Logger.debug('<%s> Success: %s', agent.site.key, proStat.dump())
+
+        stat[walker.config.processor]++
+        stat.mergePs(proStat)
       }
     }
+
+    return stat
   }
 }

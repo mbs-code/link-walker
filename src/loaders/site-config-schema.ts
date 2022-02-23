@@ -3,6 +3,13 @@ import Joi from 'joi'
 const processorTypeArray = ['extract', 'image'] as const
 export type ProcessorType = typeof processorTypeArray[number]
 
+// prettier-ignore
+const reserveWords = [
+  ...processorTypeArray,
+  'worker', 'processor', 'queue', 'site',
+  'link', 'skip', 'page', 'enque', 'download',
+]
+
 ///
 
 export type SiteConfig = {
@@ -14,7 +21,7 @@ export type SiteConfig = {
 }
 
 export type WalkerConfig = {
-  name: string // 一意のキー
+  key: string // 一意のキー
   urlPattern: string // 実行するURLの正規表現
   processor: ProcessorType // 実行する処理
 
@@ -27,7 +34,9 @@ export type WalkerConfig = {
 ///
 
 export const siteConfigSchema = Joi.object({
-  key: Joi.string().required(),
+  key: Joi.string()
+    .invalid(...reserveWords)
+    .required(),
   title: Joi.string().required(),
   url: Joi.string()
     .uri({ scheme: ['http', 'https'] })
@@ -35,7 +44,9 @@ export const siteConfigSchema = Joi.object({
 
   walkers: Joi.array()
     .items({
-      name: Joi.string().required(),
+      key: Joi.string()
+        .invalid(...reserveWords)
+        .required(),
       urlPattern: Joi.string().required(),
       processor: Joi.string()
         .valid(...processorTypeArray)
@@ -45,6 +56,6 @@ export const siteConfigSchema = Joi.object({
       priority: Joi.number().min(0).max(65_535),
       addParentGen: Joi.number().min(0),
     })
-    .unique('name')
+    .unique('key')
     .required(),
 })

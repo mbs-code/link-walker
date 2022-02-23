@@ -835,6 +835,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/valvelet@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@types/valvelet/-/valvelet-1.1.0.tgz#2a2a663e1269f91fe8c8e08ef12d4815c64aba69"
+  integrity sha512-3qG0O3YLmBg8RUDHVDWtCoXHTZI7EpHP4IPqzCXRXbQnm85aZ2Yaxre2/9kbQSqRuh81J+4BN+Q2wfb92Eu6Rg==
+
 "@types/vinyl@^2.0.4":
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/@types/vinyl/-/vinyl-2.0.6.tgz#b2d134603557a7c3d2b5d3dc23863ea2b5eb29b0"
@@ -4973,11 +4978,6 @@ slash@^3.0.0:
   resolved "https://registry.npmjs.org/slash/-/slash-3.0.0.tgz"
   integrity sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==
 
-sleep-promise@^9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/sleep-promise/-/sleep-promise-9.1.0.tgz#101ebe65700bcd184709da95d960967b02b79d03"
-  integrity sha512-UHYzVpz9Xn8b+jikYSD6bqvf754xL2uBUzDFwiU6NcdZeifPr6UfgU43xpkPu67VMS88+TI2PSI7Eohgqf2fKA==
-
 slice-ansi@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/slice-ansi/-/slice-ansi-3.0.0.tgz#31ddc10930a1b7e0b67b08c96c2f49b77a789787"
@@ -5619,6 +5619,11 @@ validate-npm-package-name@^3.0.0:
   integrity sha1-X6kS2B630MdK/BQN5zF/DKffQ34=
   dependencies:
     builtins "^1.0.3"
+
+valvelet@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/valvelet/-/valvelet-1.1.1.tgz#39bd66a732266d45c5918fbbcd3479db5602ad36"
+  integrity sha1-Ob1mpzImbUXFkY+7zTR521YCrTY=
 
 verror@1.10.0:
   version "1.10.0"

@@ -4,6 +4,10 @@ CREATE TABLE "Site" (
     "key" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "url" TEXT NOT NULL,
+    "cntStep" INTEGER NOT NULL DEFAULT 0,
+    "cntExtract" INTEGER NOT NULL DEFAULT 0,
+    "cntImage" INTEGER NOT NULL DEFAULT 0,
+    "cntReset" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -12,13 +16,15 @@ CREATE TABLE "Site" (
 CREATE TABLE "Page" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "siteId" INTEGER NOT NULL,
-    "pageId" INTEGER,
+    "parentId" INTEGER,
     "url" TEXT NOT NULL,
     "title" TEXT,
+    "walker" TEXT,
+    "processor" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
     CONSTRAINT "Page_siteId_fkey" FOREIGN KEY ("siteId") REFERENCES "Site" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT "Page_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "Page" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "Page_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "Page" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable

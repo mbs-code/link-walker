@@ -13,7 +13,7 @@ export default class FileUtil {
    * @returns {Promise<Record<string, any>>} object
    */
   public static async loadYaml(filePath: string, schema: Schema): Promise<Record<string, any>> {
-    Logger.trace('file:load %s', filePath)
+    Logger.trace('[file:load] %s', filePath)
 
     // ファイル読み込み
     const data = await promises.readFile(filePath, 'utf-8')
@@ -21,6 +21,7 @@ export default class FileUtil {
     // yaml パース＆バリデーション
     const doc = yaml.load(data)
     const valid = await schema.validateAsync(doc)
+    Logger.trace('[file:validated] SiteConfig')
 
     return valid
   }
@@ -33,11 +34,11 @@ export default class FileUtil {
    * @returns {Promise<string>} full path
    */
   public static async writeBuffer(filePath: string, buffer: Buffer): Promise<string> {
-    Logger.trace('file:write %s', filePath)
+    Logger.trace('[file:write] %s', filePath)
     await promises.writeFile(filePath, buffer)
 
     const size = prettyBytes(buffer.byteLength)
-    Logger.trace('file:write:size %s', filePath, size)
+    Logger.debug('Write: "%s" (%s)', filePath, size)
 
     return filePath
   }

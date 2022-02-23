@@ -11,10 +11,16 @@ datasource db {
 }
 
 model Site {
-  id        Int      @id @default(autoincrement())
-  key       String   @unique
-  title     String
-  url       String
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  title String
+  url   String
+
+  cntStep    Int @default(0) // ステップカウンタ
+  cntExtract Int @default(0) // 抽出処理実行カウンタ
+  cntImage   Int @default(0) // 画像処理実行カウンタ
+  cntReset   Int @default(0) // キュー初期化カウンタ
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -25,14 +31,16 @@ model Site {
 model Page {
   id        Int      @id @default(autoincrement())
   siteId    Int
-  pageId    Int? // 親ページ
+  parentId  Int? // 親ページ
   url       String
   title     String?
+  walker    String? // 使用した worker
+  processor String? // 使用した processor
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  site     Site?   @relation(fields: [siteId], references: [id])
-  parent   Page?   @relation("SubCategories", fields: [pageId], references: [id])
+  site     Site    @relation(fields: [siteId], references: [id])
+  parent   Page?   @relation("SubCategories", fields: [parentId], references: [id])
   children Page[]  @relation("SubCategories")
   queues   Queue[]
 }
@@ -45,6 +53,6 @@ model Queue {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  site Site? @relation(fields: [siteId], references: [id])
-  page Page? @relation(fields: [pageId], references: [id])
+  site Site @relation(fields: [siteId], references: [id])
+  page Page @relation(fields: [pageId], references: [id])
 }

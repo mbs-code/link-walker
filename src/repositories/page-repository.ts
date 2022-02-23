@@ -1,7 +1,14 @@
-import { Page, PrismaClient, Site } from '@prisma/client'
+import { Page, Prisma, PrismaClient, Site } from '@prisma/client'
 import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 import QueueRepository from './queue-repository'
+
+export type PageProps = {
+  parentId?: number
+  title?: string
+  walker?: string
+  processor?: string
+}
 
 const prisma = new PrismaClient()
 
@@ -70,7 +77,7 @@ export default class PageRepository {
     // 親のページが存在するか確認する
     const parent = await prisma.page.findUnique({
       where: {
-        id: page?.pageId ?? 0,
+        id: page?.parentId ?? 0,
       },
     })
 
@@ -80,51 +87,20 @@ export default class PageRepository {
   ///
 
   /**
-   * 値からページを作成・更新する.
-   *
-   * @param {Site} site サイト情報
-   * @param {string} url URL
-   * @param {string?} title ページタイトル
-   * @param {Page?} parent 親要素
-   * @returns {Promise<Page>} 作成・更新したページ
-   */
-  public static async upsertRaw(site: Site, url: string, title?: string, parent?: Page): Promise<Page> {
-    // TODO: upsert と共通化したい
-    const data = {
-      siteId: site.id,
-      pageId: parent?.id ?? null,
-      url: url,
-      title: title,
-    }
-
-    // unique要素でしか検索できないため、IDを探してから upsert する
-    const exists = await PageRepository.findOne(site, url)
-    const page = await prisma.page.upsert({
-      where: { id: exists?.id ?? 0 },
-      create: data,
-      update: data,
-    })
-
-    Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(page))
-
-    return page
-  }
-
-  /**
    * ページを作成・更新する.
    *
    * @param {Site} site サイト情報
-   * @param {Page} page 更新するページ要素
+   * @param {Prisma.PageUncheckedCreateInput} pageProp 更新するページ要素
    * @returns {Promise<Page>} 作成・更新したページ
    */
-  public static async upsert(site: Site, page: Page): Promise<Page> {
-    const data = await prisma.page.upsert({
-      where: { id: page?.id ?? 0 },
-      create: page,
-      update: page,
+  public static async upsert(site: Site, pageProp: Prisma.PageUncheckedCreateInput): Promise<Page> {
+    const page = await prisma.page.upsert({
+      where: { id: pageProp?.id ?? 0 },
+      create: pageProp,
+      update: pageProp,
     })
 
-    Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(data))
+    Logger.trace('<%s> [db:upsert:page] %s', site.key, DumpUtil.page(page))
 
     return page
   }
@@ -145,6 +121,6 @@ export default class PageRepository {
       where: { siteId: site.id },
     })
 
-    Logger.trace('> <%s> db:delete:page %s items', site.key, pages.count)
+    Logger.trace('<%s> [db:clear:page] %s items', site.key, pages.count)
   }
 }
