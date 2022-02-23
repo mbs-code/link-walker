@@ -3,7 +3,6 @@ import { CheerioAPI } from 'cheerio'
 import makeDir from 'make-dir'
 import path from 'path'
 import sanitize from 'sanitize-filename'
-import sleep from 'sleep-promise'
 import { WalkerConfig } from '../../loaders/site-config-schema'
 import ProcessorStat from '../../stats/processor-stat'
 import FileUtil from '../../utils/file-util'
@@ -47,7 +46,7 @@ export default class ImageProcessor extends BaseProcessor {
       const isUnprocessed = agent.isUnprocessedPage(dbPage)
       if (isUnprocessed) {
         // ダウンロード処理
-        const { buffer, title } = await HttpUtil.blob(link)
+        const { buffer, title } = await HttpUtil.blob(link, parent.url)
         const fullPath = path.join(dirPath, title ?? 'undefined')
         await FileUtil.writeBuffer(fullPath, buffer)
         stat.download++
@@ -61,7 +60,6 @@ export default class ImageProcessor extends BaseProcessor {
       }
 
       stat.link++
-      await sleep(1000) // TODO: 仮
     }
 
     return stat

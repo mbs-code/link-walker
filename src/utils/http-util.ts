@@ -1,7 +1,8 @@
-import got from 'got'
 import cheerio, { CheerioAPI } from 'cheerio'
 import Logger from './logger'
 import prettyBytes from 'pretty-bytes'
+import gotRateLimit from './got-rate-limit'
+import { Response } from 'got'
 
 export type HttpFetchResult = {
   url: string
@@ -19,18 +20,15 @@ export default class HttpUtil {
   /**
    * HTTP GET を行いDOM Objectを取得する.
    *
-   * @param {string | URL} url URL
+   * @param {string} url URL
+   * @param {string} parentUrl parentURL
    * @returns {Promise<HttpFetchResult>} fetch result
    */
-  public static async fetch(url: string | URL): Promise<HttpFetchResult> {
+  public static async fetch(url: string, parentUrl?: string): Promise<HttpFetchResult> {
     Logger.trace('[web:url:fetch] %s', url)
 
     // HTTP GET
-    const response = await got(url, {
-      headers: {
-        'user-agent': 'Mozilla/5.0', // TODO: .env に入れる
-      },
-    })
+    const response = (await gotRateLimit('text', url, parentUrl)) as Response<string>
 
     // DOM解析、タイトル取得
     const $ = cheerio.load(response.body)
@@ -45,19 +43,15 @@ export default class HttpUtil {
   /**
    * HTTP GET を行いBlob Bufferを取得する.
    *
-   * @param {string | URL} url URL
+   * @param {string} url URL
+   * @param {string} parentUrl parentURL
    * @returns {Promise<HttpBlobResult>} blob result
    */
-  public static async blob(url: string | URL): Promise<HttpBlobResult> {
+  public static async blob(url: string, parentUrl?: string): Promise<HttpBlobResult> {
     Logger.trace('[web:url:blob] %s', url)
 
     // HTTP GET
-    const response = await got(url, {
-      responseType: 'buffer',
-      headers: {
-        'user-agent': 'Mozilla/5.0', // TODO: .env に入れる
-      },
-    })
+    const response = (await gotRateLimit('buffer', url, parentUrl)) as Response<Buffer>
 
     // DOM解析、タイトル取得
     const title = HttpUtil.parseLastname(response.url)

@@ -62,9 +62,12 @@ export default class WalkManager {
     // キューが空ならエラー（自動追加は無限ループになってしまう）
     if (!queue) throw new ReferenceError('Queue is empty.')
 
-    // dom に変換
+    // ページと親要素を取り出す(referrer のため)
     let page = queue.page
-    const { $, title } = await HttpUtil.fetch(page.url)
+    const parent = await PageRepository.findParent(page)
+
+    // HTTP アクセスを行って DOM に変換する
+    const { $, title } = await HttpUtil.fetch(page.url, parent?.url)
 
     // タイトルをページに書き込む
     Logger.trace('<%s> Write title on page.', this.site.key)
