@@ -17,7 +17,6 @@ model Site {
   url   String
 
   cntStep    Int @default(0) // ステップカウンタ
-  cntWalker  Int @default(0) // Walker実行カウンタ
   cntExtract Int @default(0) // 抽出処理実行カウンタ
   cntImage   Int @default(0) // 画像処理実行カウンタ
 

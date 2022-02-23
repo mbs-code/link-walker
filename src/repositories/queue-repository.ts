@@ -1,5 +1,4 @@
 import { Page, PrismaClient, Queue, Site } from '@prisma/client'
-import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 const prisma = new PrismaClient()
@@ -58,7 +57,7 @@ export default class QueueRepository {
    * @param {number} priority キューの優先度
    * @returns {Queue} キュー
    */
-  public static async addQueueByPage(site: Site, page: Page, priority?: number): Promise<Queue> {
+  public static async addQueue(site: Site, page: Page, priority?: number): Promise<Queue> {
     // page の作成とキューの追加
     const queue = await prisma.queue.create({
       data: {
@@ -68,25 +67,25 @@ export default class QueueRepository {
       },
     })
 
-    Logger.trace('> <%s> db:create:queue [%d] <- %s', site.key, queue.id, DumpUtil.page(page))
-
+    Logger.trace('<%s> [db:add:queue] [%d] <- [%s]', site.key, queue.id, page.id)
     return queue
   }
 
   /**
-   * キューのデータを削除する..
+   * キューのデータを削除する.
    *
    * @param {Site} site サイト情報
    * @param {Queue} queue キュー
-   * @returns void
+   * @returns {Queue} キュー
    */
-  public static async remove(site: Site, queue: Queue): Promise<void> {
+  public static async remove(site: Site, queue: Queue): Promise<Queue> {
     // キューの削除
-    await prisma.queue.delete({
+    const delQueue = await prisma.queue.delete({
       where: { id: queue.id },
     })
 
-    Logger.trace('> <%s> db:delete:queue [%d] -> %s', site.key, queue.id, queue.pageId)
+    Logger.trace('<%s> [db:delete:queue] [%d] -> [%s]', site.key, queue.id, queue.pageId)
+    return delQueue
   }
 
   /**
@@ -101,6 +100,6 @@ export default class QueueRepository {
       where: { siteId: site.id },
     })
 
-    Logger.trace('> <%s> db:delete:queue %s items', site.key, queues.count)
+    Logger.trace('<%s> [db:clear:queue] %s items', site.key, queues.count)
   }
 }

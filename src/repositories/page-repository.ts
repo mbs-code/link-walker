@@ -100,7 +100,7 @@ export default class PageRepository {
       update: pageProp,
     })
 
-    Logger.trace('> <%s> db:upsert:page %s', site.key, DumpUtil.page(page))
+    Logger.trace('<%s> [db:upsert:page] %s', site.key, DumpUtil.page(page))
 
     return page
   }
@@ -121,6 +121,6 @@ export default class PageRepository {
       where: { siteId: site.id },
     })
 
-    Logger.trace('> <%s> db:delete:page %s items', site.key, pages.count)
+    Logger.trace('<%s> [db:clear:page] %s items', site.key, pages.count)
   }
 }

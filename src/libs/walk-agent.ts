@@ -3,7 +3,6 @@ import { CheerioAPI } from 'cheerio'
 import { WalkerConfig } from '../loaders/site-config-schema'
 import PageRepository from '../repositories/page-repository'
 import QueueRepository from '../repositories/queue-repository'
-import DumpUtil from '../utils/dump-util'
 import Logger from '../utils/logger'
 
 export default class WalkAgent {
@@ -25,8 +24,10 @@ export default class WalkAgent {
     const set = new Set<string>()
 
     // DOM から URL を抜き出す (指定が無ければURLっぽいの全部)
-    const query = walker.queryFilter ?? '[href],[src]'
-    $(query).each((i, el) => {
+    const domQuery = walker.queryFilter ?? '[href],[src]'
+    Logger.trace('<%s> [url:search] %s', this.site.key, domQuery)
+
+    $(domQuery).each((i, el) => {
       const href = $(el).attr('href')
       if (href) set.add(href)
 
@@ -36,7 +37,7 @@ export default class WalkAgent {
 
     // 配列に変換
     let links = [...set]
-    Logger.debug('> <%s> extract links: %d items', this.site.key, links.length)
+    Logger.trace('<%s> [url:extract] %d items', this.site.key, links.length)
 
     // URL フィルターを通す
     const urlFilter = walker.urlFilter
@@ -44,7 +45,7 @@ export default class WalkAgent {
       const matcher = new RegExp(urlFilter)
       links = links.filter((link) => matcher.test(link))
 
-      Logger.debug('> <%s> filtered links: %d items', this.site.key, links.length)
+      Logger.trace('<%s> [url:filter] %d items', this.site.key, links.length)
     }
 
     return links
@@ -129,17 +130,17 @@ export default class WalkAgent {
    * @returns {Promise<Queue>} 追加したキュー
    */
   public async addQueue(walker: WalkerConfig, page: Page): Promise<Queue> {
-    const queue = await QueueRepository.addQueueByPage(this.site, page, walker.priority)
+    const queue = await QueueRepository.addQueue(this.site, page, walker.priority)
     return queue
   }
 
   /**
-   * キューにルートページを挿入する.
+   * ルートページを作成・更新して取得する.
    *
-   * @returns void
+   * @returns {Promise<Page>} ルートページ
    */
-  public async insertQueueByRoot(): Promise<void> {
-    // ルートページの作成＆キューに入れる
+  public async upsertRootPage(): Promise<Page> {
+    // ルートページの作成＆更新
     const rootPage = await PageRepository.upsert(this.site, {
       siteId: this.site.id,
       parentId: null,
@@ -148,8 +149,6 @@ export default class WalkAgent {
       walker: null,
       processor: null,
     })
-    await QueueRepository.addQueueByPage(this.site, rootPage)
-
-    Logger.debug('> <%s> add root page: %s', this.site.key, DumpUtil.page(rootPage))
+    return rootPage
   }
 }

@@ -2,9 +2,9 @@ import { configure, getLogger, levels } from 'log4js'
 
 levels.addLevels({
   TRACE: { value: 5000, colour: 'grey' },
-  DEBUG: { value: 10_000, colour: 'cyan' },
-  INFO: { value: 20_000, colour: 'white' },
-  EVENT: { value: 25_000, colour: 'green' },
+  DEBUG: { value: 10_000, colour: 'white' },
+  INFO: { value: 20_000, colour: 'green' },
+  EVENT: { value: 25_000, colour: 'cyan' },
 })
 
 configure({

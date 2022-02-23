@@ -3,6 +3,13 @@ import Joi from 'joi'
 const processorTypeArray = ['extract', 'image'] as const
 export type ProcessorType = typeof processorTypeArray[number]
 
+// prettier-ignore
+const reserveWords = [
+  ...processorTypeArray,
+  'worker', 'processor', 'queue', 'site',
+  'link', 'skip', 'page', 'enque', 'download',
+]
+
 ///
 
 export type SiteConfig = {
@@ -27,7 +34,9 @@ export type WalkerConfig = {
 ///
 
 export const siteConfigSchema = Joi.object({
-  key: Joi.string().required(),
+  key: Joi.string()
+    .invalid(...reserveWords)
+    .required(),
   title: Joi.string().required(),
   url: Joi.string()
     .uri({ scheme: ['http', 'https'] })
@@ -35,7 +44,9 @@ export const siteConfigSchema = Joi.object({
 
   walkers: Joi.array()
     .items({
-      key: Joi.string().required(),
+      key: Joi.string()
+        .invalid(...reserveWords)
+        .required(),
       urlPattern: Joi.string().required(),
       processor: Joi.string()
         .valid(...processorTypeArray)

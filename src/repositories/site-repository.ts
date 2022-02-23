@@ -1,6 +1,8 @@
 import { PrismaClient, Site } from '@prisma/client'
-import { WalkResult } from '../libs/walk-switcher'
 import { SiteConfig } from '../loaders/site-config-schema'
+import WalkerStat from '../stats/walker-stat'
+import DumpUtil from '../utils/dump-util'
+import Logger from '../utils/logger'
 
 const prisma = new PrismaClient()
 
@@ -38,20 +40,20 @@ export default class SiteRepository {
    * サイトの統計情報を更新する.
    *
    * @param {Site} site サイト
-   * @param {WalkResult} result walk処理の結果
+   * @param {WalkerStat} stat 統計情報
    * @returns {Promise<Site>} 更新したサイトレコード
    */
-  public static async updateStats(site: Site, result: WalkResult): Promise<Site> {
+  public static async updateStats(site: Site, stat: WalkerStat): Promise<Site> {
     const updSite = await prisma.site.update({
       where: { id: site.id },
       data: {
         cntStep: { increment: 1 },
-        cntWalker: { increment: result.walker },
-        cntExtract: { increment: result.extract },
-        cntImage: { increment: result.image },
+        cntExtract: { increment: stat.extract },
+        cntImage: { increment: stat.image },
       },
     })
 
+    Logger.trace('<%s> [db:update:site] %s', site.key, DumpUtil.site(updSite))
     return updSite
   }
 
@@ -77,6 +79,7 @@ export default class SiteRepository {
       update: data,
     })
 
+    Logger.trace('<%s> [db:update:site] %s', site.key, DumpUtil.site(site))
     return site
   }
 }
