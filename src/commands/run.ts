@@ -41,22 +41,24 @@ export default class Run extends Command {
     const { manager, site } = await SiteConfigLoader.load(args.file, {
       peek: flags.peek,
     })
-    Logger.info('SITE: %s', DumpUtil.site(site))
-    Logger.info('url_: %s', site.url)
+    Logger.info('site: %s', DumpUtil.site(site))
+    Logger.info('_url: %s', site.url)
+
+    const stat = new WalkerStat()
 
     // キューのリセット処理
     if (flags.clear) {
       Logger.log('EVENT', '■ RESET queue & CLEAR history')
       await manager.clearPage()
+      stat.reset++
     } else if (flags.reset) {
       Logger.log('EVENT', '■ RESET queue')
       await manager.resetQueue()
+      stat.reset++
     }
 
     // 実行する
     Logger.log('EVENT', '■ Run walk links... step=%d', flags.step)
-
-    const stat = new WalkerStat()
     for (let i = 0; i < flags.step; i++) {
       // eslint-disable-next-line no-await-in-loop
       const walkStat = await manager.step(i + 1, flags.step)

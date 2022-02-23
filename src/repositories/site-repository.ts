@@ -50,6 +50,7 @@ export default class SiteRepository {
         cntStep: { increment: 1 },
         cntExtract: { increment: stat.extract },
         cntImage: { increment: stat.image },
+        cntReset: { increment: stat.reset },
       },
     })
 

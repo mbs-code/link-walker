@@ -6,6 +6,9 @@ export default class WalkerStat {
   /** image processor */
   public image = 0
 
+  /** リセット回数 (表では使わない) */
+  public reset = 0
+
   /** processor stats */
   public processor: ProcessorStat
 

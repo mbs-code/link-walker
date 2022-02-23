@@ -19,6 +19,7 @@ model Site {
   cntStep    Int @default(0) // ステップカウンタ
   cntExtract Int @default(0) // 抽出処理実行カウンタ
   cntImage   Int @default(0) // 画像処理実行カウンタ
+  cntReset   Int @default(0) // キュー初期化カウンタ
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
